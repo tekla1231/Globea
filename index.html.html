@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLOBEA — უსაფრთხო ეზო ყველა ბავშვისთვის</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rasa:wght@500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Georgian:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root{
+    --brand: #2F6F5E;
+    --brand-dark: #204A3F;
+    --ink: #1B2A2E;
+    --paper: #F1F0E9;
+    --paper-2: #E7E5DB;
+    --line: rgba(27,42,46,0.14);
+    --red: #C0472C;
+    --yellow: #C98A1E;
+    --green: #3C8562;
+    --radius-s: 6px;
+    --radius-m: 14px;
+    --radius-l: 26px;
+    --shadow: 0 12px 32px rgba(27,42,46,0.10);
+    --font-display: 'Rasa', 'Noto Sans Georgian', serif;
+    --font-body: 'Noto Sans', 'Noto Sans Georgian', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  img{max-width:100%; display:block;}
+  h1,h2,h3,h4{font-family:var(--font-display); margin:0; font-weight:700; letter-spacing:-0.01em;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+  :focus-visible{outline:3px solid var(--brand); outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
+
+  /* ---------- NAV ---------- */
+  header.site-nav{
+    position:sticky; top:0; z-index:50; background:rgba(241,240,233,0.92);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+  }
+  .nav-row{display:flex; align-items:center; justify-content:space-between; padding:16px 28px; max-width:1180px; margin:0 auto; gap:18px;}
+  .logo-area{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:700; font-size:1.4rem; color:var(--brand-dark);}
+  .logo-area img{height:34px; width:auto; border-radius:8px;}
+  .logo-mark{width:34px; height:34px; border-radius:9px; background:var(--brand); position:relative; flex:none;}
+  .logo-mark::before, .logo-mark::after{content:''; position:absolute; background:var(--paper); border-radius:2px;}
+  .logo-mark::before{width:14px; height:3px; top:11px; left:10px; transform:rotate(-28deg);}
+  .logo-mark::after{width:14px; height:3px; top:19px; left:10px; transform:rotate(28deg);}
+  nav.nav-links{display:flex; gap:26px; font-size:0.98rem; font-weight:500;}
+  nav.nav-links a{text-decoration:none; position:relative; padding:4px 0;}
+  nav.nav-links a::after{content:''; position:absolute; left:0; right:100%; bottom:-2px; height:2px; background:var(--brand); transition:right .22s ease;}
+  nav.nav-links a:hover::after{right:0;}
+  .nav-actions{display:flex; align-items:center; gap:10px;}
+  .btn{border:none; border-radius:999px; padding:10px 20px; font-size:0.92rem; font-weight:600; transition:transform .15s ease, box-shadow .15s ease;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--brand); color:#fff; box-shadow:0 8px 20px rgba(47,111,94,0.28);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--brand); color:var(--brand-dark);}
+  .btn-small{padding:7px 14px; font-size:0.82rem;}
+  .icon-btn{width:38px; height:38px; border-radius:999px; border:1px solid var(--line); background:#fff; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; color:var(--brand-dark);}
+  .hamburger{display:none; background:none; border:none; font-size:1.5rem; color:var(--ink);}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative; overflow:hidden; padding:86px 0 70px;}
+  .hero-grid{display:grid; grid-template-columns:1.15fr 0.85fr; gap:50px; align-items:center;}
+  .eyebrow-tag{display:inline-flex; align-items:center; gap:8px; background:var(--paper-2); border-radius:999px; padding:7px 16px; font-size:0.85rem; font-weight:600; color:var(--brand-dark); margin-bottom:22px;}
+  .eyebrow-tag span.dot{width:8px; height:8px; border-radius:50%; background:var(--red); animation:pulse 2.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+  .hero h1{font-size:clamp(2.1rem, 4.4vw, 3.4rem); line-height:1.12; color:var(--brand-dark); max-width:16ch;}
+  .hero p.lead{font-size:1.12rem; max-width:46ch; margin-top:20px; color:#3A4A4E;}
+  .hero-ctas{display:flex; gap:14px; margin-top:32px; flex-wrap:wrap;}
+  .stat-row{display:flex; gap:34px; margin-top:46px; flex-wrap:wrap;}
+  .stat-row .stat b{display:block; font-family:var(--font-display); font-size:1.7rem; color:var(--brand-dark);}
+  .stat-row .stat span{font-size:0.85rem; color:#5b6b6e;}
+  .hero-art{position:relative; aspect-ratio:1/1; max-width:420px; margin:0 auto;}
+  .hero-art svg{width:100%; height:100%;}
+  .hero-photo-wrap{position:relative; max-width:380px; margin:8px auto 30px;}
+  .hero-photo-wrap::before{content:''; position:absolute; top:-20px; right:-20px; bottom:20px; left:20px; background:var(--brand); border-radius:var(--radius-l); z-index:0; transition:background .2s ease;}
+  .hero-photo{position:relative; z-index:1; border-radius:var(--radius-l); overflow:hidden; box-shadow:var(--shadow); aspect-ratio:4/5;}
+  .hero-photo img{width:100%; height:100%; object-fit:cover;}
+  .hero-chip{position:absolute; z-index:2; bottom:-22px; left:-22px; background:#fff; border-radius:var(--radius-m); padding:14px 20px; box-shadow:var(--shadow); display:flex; align-items:center; gap:12px; border:1px solid var(--line);}
+  .hero-chip-dot{width:11px; height:11px; border-radius:50%; background:var(--green); flex:none; position:relative;}
+  .hero-chip-dot::after{content:''; position:absolute; inset:-5px; border-radius:50%; border:2px solid var(--green); opacity:0.5; animation:pulse 2.4s infinite;}
+  .hero-chip b{display:block; font-family:var(--font-display); font-size:1.4rem; color:var(--brand-dark); line-height:1.1;}
+  .hero-chip span{font-size:0.72rem; color:#6b7a7d; white-space:nowrap;}
+
+  /* ---------- SECTION GENERIC ---------- */
+  section{padding:88px 0;}
+  .section-head{max-width:640px; margin-bottom:46px;}
+  .section-kicker{color:var(--brand); font-weight:700; font-size:0.9rem; margin-bottom:10px; display:block;}
+  .section-head h2{font-size:clamp(1.7rem,3vw,2.3rem); color:var(--brand-dark);}
+  .section-head p{margin-top:14px; color:#4a5a5d; font-size:1.03rem;}
+
+  /* ---------- WHO WE ARE ---------- */
+  #about{background:var(--paper-2);}
+  .about-grid{display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:center;}
+  .about-image{border-radius:var(--radius-l); overflow:hidden; box-shadow:var(--shadow); aspect-ratio:4/5;}
+  .about-image img{width:100%; height:100%; object-fit:cover;}
+  .about-text p{font-size:1.04rem; color:#37474a;}
+  .mission-card{margin-top:52px; background:var(--brand-dark); color:#fff; border-radius:var(--radius-l); padding:44px 48px; display:grid; grid-template-columns:auto 1fr; gap:34px; align-items:center;}
+  .mission-card .mark{font-family:var(--font-display); font-size:3.2rem; color:rgba(255,255,255,0.4); line-height:1;}
+  .mission-card h3{color:#fff; font-size:1.05rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; font-family:var(--font-body); font-weight:700;}
+  .mission-card p{margin:0; font-size:1.18rem; font-family:var(--font-display); line-height:1.5;}
+
+  /* ---------- REPORT FORM ---------- */
+  #report{background:var(--paper);}
+  .report-shell{display:grid; grid-template-columns:1fr 1fr; gap:0; background:#fff; border-radius:var(--radius-l); overflow:hidden; box-shadow:var(--shadow); border:1px solid var(--line);}
+  .report-side{background:var(--brand); color:#fff; padding:52px 44px; display:flex; flex-direction:column; justify-content:space-between;}
+  .report-side h3{color:#fff; font-size:1.6rem; max-width:16ch;}
+  .report-side p{color:rgba(255,255,255,0.86); margin-top:14px;}
+  .privacy-badge{display:inline-flex; align-items:center; gap:10px; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.3); border-radius:999px; padding:10px 18px; font-size:0.86rem; font-weight:600; margin-top:30px; width:fit-content;}
+  .privacy-badge .shield{width:18px; height:18px; flex:none;}
+  .report-form{padding:44px; display:flex; flex-direction:column; gap:18px;}
+  .field label{display:block; font-size:0.86rem; font-weight:600; margin-bottom:7px; color:#3a4a4e;}
+  .field input[type=text], .field textarea, .field input[type=url]{
+    width:100%; border:1px solid var(--line); border-radius:var(--radius-s); padding:12px 14px; font-size:0.96rem; font-family:inherit; background:var(--paper); color:var(--ink);
+  }
+  .field textarea{min-height:100px; resize:vertical;}
+  .field input:focus, .field textarea:focus{border-color:var(--brand); background:#fff;}
+  .mode-toggle{display:flex; background:var(--paper-2); border-radius:999px; padding:4px; width:fit-content;}
+  .mode-toggle button{border:none; background:none; padding:9px 18px; border-radius:999px; font-size:0.86rem; font-weight:600; color:#5b6b6e;}
+  .mode-toggle button.active{background:#fff; color:var(--brand-dark); box-shadow:0 3px 10px rgba(0,0,0,0.08);}
+  .file-drop{border:1.5px dashed var(--line); border-radius:var(--radius-s); padding:20px; text-align:center; font-size:0.88rem; color:#5b6b6e; background:var(--paper); cursor:pointer;}
+  .file-drop.has-file{border-color:var(--brand); color:var(--brand-dark);}
+  .file-drop input{display:none;}
+  .form-msg{font-size:0.88rem; border-radius:var(--radius-s); padding:12px 14px; display:none;}
+  .form-msg.show{display:block;}
+  .form-msg.ok{background:rgba(60,133,98,0.12); color:var(--green);}
+
+  /* ---------- MAP ---------- */
+  #map-section{background:var(--paper-2);}
+  .map-shell{display:grid; grid-template-columns:1.3fr 1fr; gap:26px; align-items:start;}
+  #leaflet-map{height:460px; border-radius:var(--radius-l); box-shadow:var(--shadow); border:1px solid var(--line); z-index:1;}
+  .map-list{max-height:460px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:4px;}
+  .map-list-item{background:#fff; border:1px solid var(--line); border-radius:var(--radius-m); padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:box-shadow .15s ease;}
+  .map-list-item:hover{box-shadow:0 6px 16px rgba(0,0,0,0.08);}
+  .status-dot{width:12px; height:12px; border-radius:50%; flex:none;}
+  .map-list-item .mli-text{flex:1; min-width:0;}
+  .map-list-item .mli-addr{font-weight:600; font-size:0.92rem; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .map-list-item .mli-meta{font-size:0.78rem; color:#6b7a7d; margin-top:2px;}
+
+  /* ---------- RESULTS GRID ---------- */
+  .status-filters{display:flex; gap:10px; margin-bottom:28px; flex-wrap:wrap;}
+  .status-filters button{border:1px solid var(--line); background:#fff; border-radius:999px; padding:8px 16px; font-size:0.84rem; font-weight:600; display:flex; align-items:center; gap:8px;}
+  .status-filters button.active{border-color:var(--ink); background:var(--ink); color:#fff;}
+  .status-filters button.active .status-dot{outline:2px solid #fff;}
+  .results-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:22px;}
+  .loc-card{background:#fff; border:1px solid var(--line); border-radius:var(--radius-m); overflow:hidden; box-shadow:0 6px 18px rgba(27,42,46,0.06); display:flex; flex-direction:column;}
+  .loc-card .thumb{aspect-ratio:16/10; background:var(--paper-2) center/cover no-repeat; position:relative;}
+  .status-badge{position:absolute; top:12px; left:12px; display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.94); padding:6px 12px; border-radius:999px; font-size:0.76rem; font-weight:700;}
+  .loc-body{padding:16px 18px 18px; display:flex; flex-direction:column; gap:8px; flex:1;}
+  .loc-body .addr{font-weight:700; font-size:1rem; color:var(--brand-dark);}
+  .loc-body .district{font-size:0.8rem; color:#6b7a7d;}
+  .loc-body .desc{font-size:0.88rem; color:#4a5a5d; flex:1; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .loc-footer{display:flex; align-items:center; justify-content:space-between; margin-top:6px;}
+  .contacts-chip{font-size:0.78rem; color:#5b6b6e; font-weight:600;}
+  .empty-note{color:#6b7a7d; font-size:0.94rem; padding:30px; text-align:center; border:1px dashed var(--line); border-radius:var(--radius-m); grid-column:1/-1;}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--brand-dark); color:rgba(255,255,255,0.85); padding:56px 0 26px; margin-top:0;}
+  .footer-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:40px; padding-bottom:36px; border-bottom:1px solid rgba(255,255,255,0.16);}
+  footer h4{color:#fff; font-size:1rem; margin-bottom:14px;}
+  footer .logo-area{color:#fff;}
+  footer p{font-size:0.92rem; color:rgba(255,255,255,0.7); max-width:34ch;}
+  footer a{text-decoration:none; font-size:0.92rem; color:rgba(255,255,255,0.82); display:block; margin-bottom:8px;}
+  footer a:hover{color:#fff;}
+  .social-row{display:flex; gap:10px; margin-top:10px;}
+  .social-row a{width:38px; height:38px; border-radius:50%; border:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; margin:0;}
+  .footer-bottom{display:flex; justify-content:space-between; align-items:center; padding-top:22px; font-size:0.8rem; color:rgba(255,255,255,0.55); flex-wrap:wrap; gap:10px;}
+  .footer-admin-btn{background:none; border:1px solid rgba(255,255,255,0.25); color:rgba(255,255,255,0.6); border-radius:999px; padding:6px 14px; font-size:0.76rem;}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{position:fixed; inset:0; background:rgba(20,28,30,0.55); display:none; align-items:center; justify-content:center; z-index:200; padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:#fff; border-radius:var(--radius-l); max-width:480px; width:100%; padding:36px; position:relative; max-height:88vh; overflow-y:auto;}
+  .modal-box.wide{max-width:760px;}
+  .modal-box.admin-box{max-width:920px; padding:0;}
+  .modal-close{position:absolute; top:18px; right:18px; width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:1rem;}
+  .modal-box h3{color:var(--brand-dark); font-size:1.4rem; margin-bottom:6px;}
+  .modal-sub{color:#6b7a7d; font-size:0.9rem; margin-bottom:22px;}
+
+  /* Admin panel */
+  .admin-shell{display:grid; grid-template-columns:200px 1fr; min-height:520px; border-radius:var(--radius-l); overflow:hidden;}
+  .admin-tabs{background:var(--paper-2); padding:26px 14px; display:flex; flex-direction:column; gap:4px;}
+  .admin-tabs button{text-align:left; background:none; border:none; padding:11px 14px; border-radius:var(--radius-s); font-size:0.88rem; font-weight:600; color:#4a5a5d;}
+  .admin-tabs button.active{background:#fff; color:var(--brand-dark); box-shadow:0 3px 10px rgba(0,0,0,0.06);}
+  .admin-content{padding:32px 36px; overflow-y:auto; max-height:80vh;}
+  .admin-content h3{margin-bottom:20px;}
+  .admin-content .modal-close{top:14px; right:14px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .admin-block{border:1px solid var(--line); border-radius:var(--radius-m); padding:20px; margin-bottom:20px;}
+  .admin-block h4{font-size:0.92rem; color:var(--brand-dark); margin-bottom:14px; text-transform:none;}
+  .color-row{display:flex; align-items:center; gap:14px;}
+  .color-row input[type=color]{width:56px; height:40px; border:1px solid var(--line); border-radius:8px; padding:2px; background:#fff;}
+  .thumb-preview{width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:var(--radius-s); border:1px solid var(--line); margin-top:10px; background:var(--paper-2);}
+  .loc-admin-row{display:flex; align-items:flex-start; gap:12px; border:1px solid var(--line); border-radius:var(--radius-s); padding:12px 14px; margin-bottom:8px; background:#fff;}
+  .loc-admin-row .lar-text{flex:1; font-size:0.86rem;}
+  .loc-admin-row .lar-text b{display:block; font-size:0.92rem;}
+  .row-btns{display:flex; gap:6px;}
+  .row-btns button{border:1px solid var(--line); background:#fff; border-radius:6px; padding:6px 10px; font-size:0.78rem;}
+  .row-move{display:flex; flex-direction:column; gap:3px; flex:none; padding-top:2px;}
+  .row-move button{width:24px; height:22px; font-size:12px; line-height:1; border:1px solid var(--line); background:var(--paper); border-radius:5px; padding:0; color:var(--brand-dark);}
+  .row-move button:disabled{opacity:0.3; cursor:default;}
+  .lar-fields{flex:1; min-width:0; display:flex; flex-direction:column; gap:5px;}
+  .lar-top-line{display:flex; align-items:center; gap:8px;}
+  .inline-input{border:1px solid transparent; border-bottom:1px solid var(--line); background:transparent; font-size:0.88rem; padding:3px 2px; width:100%; font-family:inherit; color:var(--ink); border-radius:4px;}
+  .inline-input:hover{background:var(--paper);}
+  .inline-input:focus{border-color:var(--brand); background:#fff;}
+  .inline-input.addr-input{font-weight:700; font-size:0.94rem;}
+  .inline-input.contacts-input{width:70px; flex:none;}
+  .lar-meta-row{display:flex; gap:10px; align-items:center;}
+  .expand-toggle{background:none; border:1px solid var(--line); border-radius:6px; font-size:0.76rem; padding:4px 9px; color:#5b6b6e; flex:none;}
+  .row-detail{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:10px;}
+  .row-detail textarea.inline-input{min-height:64px; resize:vertical;}
+  .row-detail .rd-thumb{width:120px; height:80px; object-fit:cover; border-radius:6px; border:1px solid var(--line);}
+  .qr-box{display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; margin-top:14px;}
+  #qrCanvasHolder{background:#fff; padding:14px; border-radius:12px; border:1px solid var(--line); flex:none;}
+  #qrCanvasHolder img, #qrCanvasHolder canvas{display:block;}
+  .mini-map{height:220px; border-radius:var(--radius-s); margin-top:10px; border:1px solid var(--line);}
+  .admin-note{font-size:0.8rem; color:#8a4b1f; background:#FBF0E2; border-radius:var(--radius-s); padding:10px 12px; margin-top:14px;}
+  .report-admin-item{border:1px solid var(--line); border-radius:var(--radius-s); padding:14px; margin-bottom:10px;}
+  .report-admin-item .ra-top{display:flex; justify-content:space-between; font-size:0.82rem; color:#6b7a7d; margin-bottom:6px;}
+  .tag-new{background:var(--red); color:#fff; font-size:0.7rem; padding:2px 8px; border-radius:999px; font-weight:700;}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:13px 22px; border-radius:999px; font-size:0.88rem; z-index:400; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+
+  @media (max-width: 900px){
+    .hero-grid, .about-grid, .report-shell, .map-shell{grid-template-columns:1fr;}
+    .hero-photo-wrap{order:-1; max-width:260px; margin:0 auto 40px;}
+    .hero-chip{padding:11px 15px; bottom:-18px; left:-14px;}
+    .hero-chip b{font-size:1.15rem;}
+    .mission-card{grid-template-columns:1fr; padding:32px;}
+    nav.nav-links{position:fixed; top:70px; left:0; right:0; background:var(--paper); flex-direction:column; padding:20px 28px; border-bottom:1px solid var(--line); display:none; gap:16px;}
+    nav.nav-links.open{display:flex;}
+    .hamburger{display:block;}
+    .admin-shell{grid-template-columns:1fr;}
+    .admin-tabs{flex-direction:row; overflow-x:auto;}
+    .footer-grid{grid-template-columns:1fr; gap:26px;}
+    .field-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="nav-row">
+    <div class="logo-area" id="logoArea">
+      <span class="logo-mark" id="logoMark"></span>
+      <span id="logoTextEl">GLOBEA</span>
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="menu">☰</button>
+    <nav class="nav-links" id="navLinks">
+      <a href="#about" data-i18n="nav_about">ჩვენ შესახებ</a>
+      <a href="#report" data-i18n="nav_report">შეატყობინე</a>
+      <a href="#map-section" data-i18n="nav_results">შედეგები</a>
+      <a href="#contact" data-i18n="nav_contact">კონტაქტი</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-btn" id="langToggle" title="Language">EN</button>
+      <button class="btn btn-ghost btn-small" id="adminLoginBtn" data-i18n="nav_admin">ადმინი</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow-tag"><span class="dot"></span><span data-i18n="hero_kicker">ახალგაზრდული საქალაქო ინიციატივა · თბილისი</span></span>
+      <h1 id="heroTitleEl">უსაფრთხო ეზო და სკვერი თბილისის ყოველ ბავშვს</h1>
+      <p class="lead" id="heroSubtitleEl">ჩვენ ვაკვირდებით სათამაშო მოედნების მდგომარეობას, ვაწვდით ინფორმაციას მუნიციპალიტეტს და ვადევნებთ თვალს პრობლემის მოგვარებამდე.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" id="heroCta" data-i18n="hero_cta">შეატყობინე პრობლემის შესახებ</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('map-section').scrollIntoView({behavior:'smooth'})" data-i18n="hero_cta2">იხილე რუკაზე</button>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b id="statLocations">0</b><span data-i18n="stat_locations">დაფიქსირებული ადგილი</span></div>
+        <div class="stat"><b id="statResolved">0</b><span data-i18n="stat_resolved">შეკეთებული</span></div>
+        <div class="stat"><b id="statContacts">0</b><span data-i18n="stat_contacts">მოქალაქის ხმა</span></div>
+      </div>
+    </div>
+    <div class="hero-photo-wrap">
+      <div class="hero-photo"><img id="heroImageEl" src="https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=800&auto=format&fit=crop" alt="სათამაშო მოედანი"></div>
+      <div class="hero-chip">
+        <span class="hero-chip-dot"></span>
+        <div><b id="heroChipNum">0</b><span data-i18n="hero_chip_label">ლოკაცია მონიტორინგზეა</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap about-grid">
+    <div class="about-image">
+      <img id="aboutImageEl" src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=800&auto=format&fit=crop" alt="GLOBEA team">
+    </div>
+    <div class="about-text">
+      <span class="section-kicker" data-i18n="about_kicker">ჩვენ ვართ</span>
+      <h2 data-i18n="about_title">ჩვენ შესახებ</h2>
+      <p id="aboutTextEl" style="margin-top:18px;">GLOBEA არის ახალგაზრდების მიერ დაარსებული საინიციატივო ჯგუფი, რომელიც აკვირდება თბილისის ეზოებსა და სკვერებში სათამაშო მოედნების უსაფრთხოებას. ჩვენ ვაგროვებთ მოქალაქეების შეტყობინებებს, ვამოწმებთ ადგილს და ვთანამშრომლობთ მუნიციპალიტეტთან პრობლემის სწრაფად მოსაგვარებლად.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="mission-card">
+      <div class="mark">“</div>
+      <div>
+        <h3 data-i18n="mission_kicker">ჩვენი მისია</h3>
+        <p id="missionTextEl">გვჯერა, რომ ყველა ბავშვს, დაბადების უბნის მიუხედავად, აქვს უფლება ითამაშოს უსაფრთხო და მოვლილ სივრცეში — და ჩვენ ამის მისაღწევად ვმუშაობთ ერთად, საზოგადოებასთან ერთად.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="report">
+  <div class="wrap">
+    <div class="report-shell">
+      <div class="report-side">
+        <div>
+          <h3 data-i18n="form_side_title">დაინახე დაზიანებული სათამაშო მოედანი?</h3>
+          <p data-i18n="form_side_text">გვითხარი მისამართი და რაც შეიმჩნევა — ჩვენ დანარჩენს გავაკეთებთ: შევამოწმებთ, დავუკავშირდებით მუნიციპალიტეტს და გავყვებით შედეგს.</p>
+        </div>
+        <div class="privacy-badge">
+          <svg class="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.6 8.7 8 11 4.4-2.3 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span data-i18n="privacy_badge">100% ანონიმური და უსაფრთხო</span>
+        </div>
+      </div>
+      <form class="report-form" id="reportForm">
+        <h4 style="font-family:var(--font-display); font-size:1.2rem; color:var(--brand-dark); margin:0;" data-i18n="form_title">პრობლემის შეტყობინება</h4>
+        <div class="field">
+          <label data-i18n="label_address">უბანი / მისამართი</label>
+          <input type="text" id="reportAddress" required data-i18n-ph="placeholder_address" placeholder="მაგ. ნაძალადევი, დადიანის ქუჩა 154">
+        </div>
+        <div class="field">
+          <label data-i18n="label_description">დაზიანების აღწერა</label>
+          <textarea id="reportDescription" required data-i18n-ph="placeholder_description" placeholder="აღწერეთ რა არის დაზიანებული ან საშიში..."></textarea>
+        </div>
+        <div class="field">
+          <label data-i18n="label_file">ფოტო ან ვიდეო</label>
+          <label class="file-drop" id="fileDropLabel">
+            <span id="fileDropText" data-i18n="file_drop_text">დააჭირეთ ან ჩააგდეთ ფაილი აქ</span>
+            <input type="file" id="reportFile" accept="image/*,video/*">
+          </label>
+        </div>
+        <div class="field">
+          <label data-i18n="label_mode">როგორ გსურთ წარმოგვიდგინოთ თავი?</label>
+          <div class="mode-toggle">
+            <button type="button" class="active" id="modeAnon" data-i18n="mode_anonymous">ანონიმურად</button>
+            <button type="button" id="modeName" data-i18n="mode_name">სახელით</button>
+          </div>
+        </div>
+        <div class="field" id="nameField" style="display:none;">
+          <label data-i18n="label_name">სახელი და გვარი</label>
+          <input type="text" id="reportName" data-i18n-ph="placeholder_name" placeholder="სახელი გვარი">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:14px;" data-i18n="submit_btn">შეტყობინების გაგზავნა</button>
+        <div class="form-msg ok" id="formMsg" data-i18n="submit_success">მადლობა! თქვენი შეტყობინება მიღებულია.</div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section id="map-section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-kicker" data-i18n="map_kicker">რუკა</span>
+      <h2 data-i18n="map_title">სად უკვე ვიყავით</h2>
+      <p data-i18n="map_subtitle">თბილისის რუკაზე მონიშნულია ყველა ადგილი, სადაც მოქალაქეებმა შეგვატყობინეს პრობლემა — ფერი აჩვენებს სტატუსს.</p>
+    </div>
+    <div class="map-shell">
+      <div id="leaflet-map"></div>
+      <div class="map-list" id="mapList"></div>
+    </div>
+  </div>
+</section>
+
+<section id="results" style="padding-top:0;">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-kicker" data-i18n="results_kicker">გამჭვირვალობა</span>
+      <h2 data-i18n="results_title">შედეგები</h2>
+      <p data-i18n="results_subtitle">ყოველი ბარათი — რეალური ადგილია, სადაც მოქალაქეებმა გვითხარეს პრობლემის შესახებ. თვალი ადევნეთ პროგრესს.</p>
+    </div>
+    <div class="status-filters" id="statusFilters">
+      <button class="active" data-filter="all" data-i18n="filter_all">ყველა</button>
+      <button data-filter="red"><span class="status-dot" style="background:var(--red)"></span><span data-i18n="status_red">დაფიქსირებულია</span></button>
+      <button data-filter="yellow"><span class="status-dot" style="background:var(--yellow)"></span><span data-i18n="status_yellow">გაგზავნილია წერილი</span></button>
+      <button data-filter="green"><span class="status-dot" style="background:var(--green)"></span><span data-i18n="status_green">შეაკეთეს</span></button>
+    </div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="logo-area"><span class="logo-mark"></span><span id="footerLogoText">GLOBEA</span></div>
+        <p style="margin-top:16px;" data-i18n="footer_desc">ახალგაზრდული საქალაქო ინიციატივა, რომელიც ზრუნავს თბილისის ეზოებისა და სკვერების უსაფრთხოებაზე ბავშვებისთვის.</p>
+      </div>
+      <div>
+        <h4 data-i18n="footer_nav">ნავიგაცია</h4>
+        <a href="#about" data-i18n="nav_about">ჩვენ შესახებ</a>
+        <a href="#report" data-i18n="nav_report">შეატყობინე</a>
+        <a href="#map-section" data-i18n="nav_results">შედეგები</a>
+      </div>
+      <div>
+        <h4 data-i18n="footer_contact">კონტაქტი</h4>
+        <a href="mailto:contact@globea.ge" id="footerEmail">contact@globea.ge</a>
+        <div class="social-row">
+          <a href="#" id="footerFacebook" target="_blank" rel="noopener" title="Facebook" aria-label="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3Z"/></svg></a>
+          <a href="#" id="footerInstagram" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+          <a href="#" id="footerTiktok" target="_blank" rel="noopener" title="TikTok" aria-label="TikTok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4v9.5a3.5 3.5 0 1 1-3-3.46V7a6.5 6.5 0 1 0 6.5 6.5V9.8A6 6 0 0 0 21 11V8a4 4 0 0 1-4-4h-3Z"/></svg></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="yearEl"></span> GLOBEA. <span data-i18n="footer_rights">ყველა უფლება დაცულია.</span></span>
+      <button class="footer-admin-btn" id="adminLoginBtn2" data-i18n="nav_admin_footer">ადმინის შესვლა</button>
+    </div>
+  </div>
+</footer>
+
+<!-- LOCATION DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box wide">
+    <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <h3 data-i18n="admin_login_title">ადმინის შესვლა</h3>
+    <p class="modal-sub" data-i18n="admin_login_sub">შესვლა შესაძლებელია მხოლოდ პაროლის მფლობელისთვის.</p>
+    <div class="field">
+      <label data-i18n="admin_password_label">პაროლი</label>
+      <input type="password" id="adminPasswordInput" style="width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:8px;">
+    </div>
+    <p id="loginError" style="color:var(--red); font-size:0.85rem; display:none; margin:10px 0 0;" data-i18n="admin_wrong_password">არასწორი პაროლი</p>
+    <button class="btn btn-primary" style="width:100%; margin-top:16px;" id="loginSubmitBtn" data-i18n="admin_login_btn">შესვლა</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL MODAL -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal-box admin-box">
+    <div class="admin-shell">
+      <div class="admin-tabs">
+        <button class="active" data-tab="branding" data-i18n="admin_tab_branding">დიზაინი და ტექსტი</button>
+        <button data-tab="locations" data-i18n="admin_tab_locations">ლოკაციები</button>
+        <button data-tab="reports" data-i18n="admin_tab_reports">შეტყობინებები</button>
+        <button data-tab="settings" data-i18n="admin_tab_settings">პარამეტრები</button>
+        <button data-tab="texts" data-i18n="admin_tab_texts">ყველა ტექსტი</button>
+        <button data-tab="logout" id="adminLogoutBtn" data-i18n="admin_logout" style="margin-top:auto; color:var(--red);">გამოსვლა</button>
+      </div>
+      <div class="admin-content">
+        <button class="modal-close" onclick="closeModal('adminModal')">✕</button>
+        <div id="adminTabBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ============================= I18N ============================= */
+const I18N = {
+  ka:{
+    nav_about:"ჩვენ შესახებ", nav_report:"შეატყობინე", nav_results:"შედეგები", nav_contact:"კონტაქტი",
+    nav_admin:"ადმინი", nav_admin_footer:"ადმინის შესვლა",
+    hero_kicker:"ახალგაზრდული საქალაქო ინიციატივა · თბილისი",
+    hero_cta:"შეატყობინე პრობლემის შესახებ", hero_cta2:"იხილე რუკაზე",
+    hero_chip_label:"ლოკაცია მონიტორინგზეა",
+    stat_locations:"დაფიქსირებული ადგილი", stat_resolved:"შეკეთებული", stat_contacts:"მოქალაქის ხმა",
+    about_kicker:"ჩვენ ვართ", about_title:"ჩვენ შესახებ", mission_kicker:"ჩვენი მისია",
+    form_side_title:"დაინახე დაზიანებული სათამაშო მოედანი?",
+    form_side_text:"გვითხარი მისამართი და რაც შეიმჩნევა — ჩვენ დანარჩენს გავაკეთებთ: შევამოწმებთ, დავუკავშირდებით მუნიციპალიტეტს და გავყვებით შედეგს.",
+    privacy_badge:"100% ანონიმური და უსაფრთხო", form_title:"პრობლემის შეტყობინება",
+    label_address:"უბანი / მისამართი", placeholder_address:"მაგ. ნაძალადევი, დადიანის ქუჩა 154",
+    label_description:"დაზიანების აღწერა", placeholder_description:"აღწერეთ რა არის დაზიანებული ან საშიში...",
+    label_file:"ფოტო ან ვიდეო", file_drop_text:"დააჭირეთ ან ჩააგდეთ ფაილი აქ",
+    label_mode:"როგორ გსურთ წარმოგვიდგინოთ თავი?", mode_anonymous:"ანონიმურად", mode_name:"სახელით",
+    label_name:"სახელი და გვარი", placeholder_name:"სახელი გვარი",
+    submit_btn:"შეტყობინების გაგზავნა", submit_success:"მადლობა! თქვენი შეტყობინება მიღებულია.",
+    map_kicker:"რუკა", map_title:"სად უკვე ვიყავით", map_subtitle:"თბილისის რუკაზე მონიშნულია ყველა ადგილი, სადაც მოქალაქეებმა შეგვატყობინეს პრობლემა — ფერი აჩვენებს სტატუსს.",
+    results_kicker:"გამჭვირვალობა", results_title:"შედეგები",
+    results_subtitle:"ყოველი ბარათი — რეალური ადგილია, სადაც მოქალაქეებმა გვითხარეს პრობლემის შესახებ. თვალი ადევნეთ პროგრესს.",
+    filter_all:"ყველა", status_red:"დაფიქსირებულია", status_yellow:"გაგზავნილია წერილი", status_green:"შეაკეთეს",
+    contacts_label:"მომმართველი", more_btn:"მეტის ნახვა",
+    footer_desc:"ახალგაზრდული საქალაქო ინიციატივა, რომელიც ზრუნავს თბილისის ეზოებისა და სკვერების უსაფრთხოებაზე ბავშვებისთვის.",
+    footer_nav:"ნავიგაცია", footer_contact:"კონტაქტი", footer_rights:"ყველა უფლება დაცულია.",
+    admin_login_title:"ადმინის შესვლა", admin_login_sub:"შესვლა შესაძლებელია მხოლოდ პაროლის მფლობელისთვის.",
+    admin_password_label:"პაროლი", admin_login_btn:"შესვლა", admin_wrong_password:"არასწორი პაროლი",
+    admin_tab_branding:"დიზაინი და ტექსტი", admin_tab_locations:"ლოკაციები", admin_tab_reports:"შეტყობინებები",
+    admin_tab_settings:"პარამეტრები", admin_tab_texts:"ყველა ტექსტი", admin_logout:"გამოსვლა",
+    no_locations:"ლოკაციები ჯერ არ არის დამატებული.", empty_reports:"შეტყობინებები ჯერ არ არის.",
+  },
+  en:{
+    nav_about:"About us", nav_report:"Report", nav_results:"Results", nav_contact:"Contact",
+    nav_admin:"Admin", nav_admin_footer:"Admin login",
+    hero_kicker:"A youth-led civic initiative · Tbilisi",
+    hero_cta:"Report a problem", hero_cta2:"View the map",
+    hero_chip_label:"locations monitored",
+    stat_locations:"Locations logged", stat_resolved:"Repaired", stat_contacts:"Citizen voices",
+    about_kicker:"Who we are", about_title:"Who we are", mission_kicker:"Our mission",
+    form_side_title:"Spotted a damaged playground?",
+    form_side_text:"Tell us the address and what you noticed — we'll do the rest: verify it, contact the municipality, and follow it through to a fix.",
+    privacy_badge:"100% anonymous & secure", form_title:"Report a problem",
+    label_address:"District / address", placeholder_address:"e.g. Nadzaladevi, Dadiani St. 154",
+    label_description:"Describe the damage", placeholder_description:"Describe what's damaged or dangerous...",
+    label_file:"Photo or video", file_drop_text:"Click or drop a file here",
+    label_mode:"How should we identify you?", mode_anonymous:"Anonymous", mode_name:"With my name",
+    label_name:"Full name", placeholder_name:"First and last name",
+    submit_btn:"Submit report", submit_success:"Thank you! Your report has been received.",
+    map_kicker:"Map", map_title:"Where we've already been", map_subtitle:"Every marker on the Tbilisi map is a reported location — the color shows its current status.",
+    results_kicker:"Transparency", results_title:"Results",
+    results_subtitle:"Every card is a real location where citizens told us about a problem. Follow the progress.",
+    filter_all:"All", status_red:"Reported", status_yellow:"Letter sent", status_green:"Repaired",
+    contacts_label:"people contacted us", more_btn:"See details",
+    footer_desc:"A youth-led civic initiative caring for the safety of playgrounds in Tbilisi's yards and squares.",
+    footer_nav:"Navigation", footer_contact:"Contact", footer_rights:"All rights reserved.",
+    admin_login_title:"Admin login", admin_login_sub:"Only the password holder can sign in.",
+    admin_password_label:"Password", admin_login_btn:"Log in", admin_wrong_password:"Incorrect password",
+    admin_tab_branding:"Design & text", admin_tab_locations:"Locations", admin_tab_reports:"Reports",
+    admin_tab_settings:"Settings", admin_tab_texts:"All text", admin_logout:"Log out",
+    no_locations:"No locations added yet.", empty_reports:"No reports yet.",
+  }
+};
+let LANG = localStorage.getItem('globea_lang') || 'ka';
+
+/* ============================= STATE ============================= */
+const DEFAULT_STATE = {
+  config:{
+    brandColor:"#2F6F5E",
+    logoText:"GLOBEA",
+    logoImage:null,
+    heroTitle:{ka:"უსაფრთხო ეზო და სკვერი თბილისის ყოველ ბავშვს", en:"A safe yard and playground for every child in Tbilisi"},
+    heroSubtitle:{ka:"ჩვენ ვაკვირდებით სათამაშო მოედნების მდგომარეობას, ვაწვდით ინფორმაციას მუნიციპალიტეტს და ვადევნებთ თვალს პრობლემის მოგვარებამდე.", en:"We monitor the condition of playgrounds, inform the municipality, and follow every issue through to a fix."},
+    aboutText:{ka:"GLOBEA არის ახალგაზრდების მიერ დაარსებული საინიციატივო ჯგუფი, რომელიც აკვირდება თბილისის ეზოებსა და სკვერებში სათამაშო მოედნების უსაფრთხოებას. ჩვენ ვაგროვებთ მოქალაქეების შეტყობინებებს, ვამოწმებთ ადგილს და ვთანამშრომლობთ მუნიციპალიტეტთან პრობლემის სწრაფად მოსაგვარებლად.", en:"GLOBEA is a youth-founded initiative group monitoring playground safety in Tbilisi's yards and squares. We collect citizen reports, verify each site, and work with the municipality to get problems fixed quickly."},
+    aboutImage:"https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=800&auto=format&fit=crop",
+    heroImage:"https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=800&auto=format&fit=crop",
+    missionText:{ka:"გვჯერა, რომ ყველა ბავშვს, დაბადების უბნის მიუხედავად, აქვს უფლება ითამაშოს უსაფრთხო და მოვლილ სივრცეში — და ჩვენ ამის მისაღწევად ვმუშაობთ ერთად, საზოგადოებასთან ერთად.", en:"We believe every child, regardless of the neighborhood they were born in, deserves to play in a safe, well-kept space — and we work toward that together with the community."},
+    adminPassword:"Tekla2010",
+    contactEmail:"contact@globea.ge",
+    social:{facebook:"", instagram:"", tiktok:""},
+    i18nOverrides:{ka:{}, en:{}},
+    statOverrides:{locations:null, resolved:null, contacts:null}
+  },
+  locations:[
+    {id:"loc1", address:"ნაძალადევი, დადიანის ქუჩა 154", district:"ნაძალადევი", lat:41.7625, lng:44.8043, status:"yellow", description:"ქანქარა და სრიალის ტრასა დაზიანებულია, ლითონის ნაწილები ჟანგიანია და საშიშია ბავშვებისთვის. წერილი გაეგზავნა რაიონის მერიას.", photo:"https://images.unsplash.com/photo-1519331379826-f10be5486c6f?q=80&w=800&auto=format&fit=crop", video:"", contacts:7, date:"2026-05-14"},
+    {id:"loc2", address:"ვაკე, ჭავჭავაძის გამზირი 37", district:"ვაკე", lat:41.7132, lng:44.7681, status:"green", description:"ქვიშის სილაქარე და ჰორიზონტალური კიბე შეკეთდა მუნიციპალიტეტის მიერ, მადლობა ყველას ვინც დაგვეხმარა!", photo:"https://images.unsplash.com/photo-1580136579312-94651dfd596d?q=80&w=800&auto=format&fit=crop", video:"", contacts:12, date:"2026-03-02"},
+    {id:"loc3", address:"საბურთალო, ვაჟა-ფშაველას გამზირი 71", district:"საბურთალო", lat:41.7280, lng:44.7530, status:"red", description:"ეზოს მოედანზე გატეხილი ბენჩები და ჭუჭყიანი ქვიშის ყუთი, ბავშვებისთვის საშიშროებას წარმოადგენს.", photo:"https://images.unsplash.com/photo-1580480055273-228ff5388ef8?q=80&w=800&auto=format&fit=crop", video:"", contacts:4, date:"2026-06-20"},
+    {id:"loc4", address:"გლდანი, მე-3 მკრ., კორპ. 12", district:"გლდანი", lat:41.7825, lng:44.8115, status:"yellow", description:"ეზოს ღობე დანგრეულია და ბავშვები შეუძლიათ გავიდნენ საავტომობილო გზაზე. გამოგზავნილია წერილი რაიონის მერიაში.", photo:"https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=800&auto=format&fit=crop", video:"", contacts:9, date:"2026-04-11"}
+  ],
+  reports:[]
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem('globea_state');
+    if(!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    // merge to survive future field additions
+    return Object.assign(structuredClone(DEFAULT_STATE), parsed, {
+      config:Object.assign(structuredClone(DEFAULT_STATE.config), parsed.config||{}),
+    });
+  }catch(e){ return structuredClone(DEFAULT_STATE); }
+}
+function saveState(){
+  try{
+    localStorage.setItem('globea_state', JSON.stringify(STATE));
+  }catch(e){
+    showToast(LANG==='ka' ? "შენახვა ვერ მოხერხდა — ფაილი ძალიან დიდია." : "Could not save — file is too large.");
+  }
+}
+let STATE = loadState();
+const STATUS_COLOR = {red:"#C0472C", yellow:"#C98A1E", green:"#3C8562"};
+const STATUS_KEY = {red:"status_red", yellow:"status_yellow", green:"status_green"};
+
+/* ============================= I18N RENDER ============================= */
+function t(key){
+  const ov = STATE.config.i18nOverrides;
+  if(ov && ov[LANG] && ov[LANG][key]) return ov[LANG][key];
+  return (I18N[LANG] && I18N[LANG][key]) || key;
+}
+function renderI18n(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
+  document.getElementById('langToggle').textContent = LANG==='ka' ? 'EN' : 'ქართული';
+  applyConfig();
+  renderMapList();
+  renderResults();
+  renderLeafletMarkers();
+}
+
+/* ============================= CONFIG APPLY ============================= */
+function applyConfig(){
+  const c = STATE.config;
+  document.documentElement.style.setProperty('--brand', c.brandColor);
+  document.documentElement.style.setProperty('--brand-dark', shade(c.brandColor, -22));
+  document.getElementById('logoTextEl').textContent = c.logoText;
+  document.getElementById('footerLogoText').textContent = c.logoText;
+  document.title = c.logoText + " — " + (LANG==='ka' ? "უსაფრთხო ეზო ყველა ბავშვისთვის" : "Safe playgrounds for every child");
+  const logoArea = document.getElementById('logoArea');
+  const mark = document.getElementById('logoMark');
+  const existingImg = logoArea.querySelector('img');
+  if(c.logoImage){
+    if(existingImg){ existingImg.src = c.logoImage; } else {
+      const img = document.createElement('img'); img.src = c.logoImage; img.alt="logo";
+      logoArea.insertBefore(img, mark); mark.style.display='none';
+    }
+  } else if(existingImg){ existingImg.remove(); mark.style.display='block'; }
+  document.getElementById('heroTitleEl').textContent = c.heroTitle[LANG];
+  document.getElementById('heroSubtitleEl').textContent = c.heroSubtitle[LANG];
+  document.getElementById('heroImageEl').src = c.heroImage;
+  document.getElementById('aboutTextEl').textContent = c.aboutText[LANG];
+  document.getElementById('aboutImageEl').src = c.aboutImage;
+  document.getElementById('missionTextEl').textContent = c.missionText[LANG];
+  const emailEl = document.getElementById('footerEmail');
+  emailEl.textContent = c.contactEmail;
+  emailEl.href = 'mailto:' + c.contactEmail;
+  setSocialHref('footerFacebook', c.social.facebook);
+  setSocialHref('footerInstagram', c.social.instagram);
+  setSocialHref('footerTiktok', c.social.tiktok);
+  const autoLocations = STATE.locations.length;
+  const autoResolved = STATE.locations.filter(l=>l.status==='green').length;
+  const autoContacts = STATE.locations.reduce((s,l)=>s+(Number(l.contacts)||0),0);
+  const so = c.statOverrides || {};
+  const shownLocations = (so.locations!==null && so.locations!==undefined && so.locations!=='') ? so.locations : autoLocations;
+  const shownResolved = (so.resolved!==null && so.resolved!==undefined && so.resolved!=='') ? so.resolved : autoResolved;
+  const shownContacts = (so.contacts!==null && so.contacts!==undefined && so.contacts!=='') ? so.contacts : autoContacts;
+  document.getElementById('heroChipNum').textContent = shownLocations;
+  document.getElementById('statLocations').textContent = shownLocations;
+  document.getElementById('statResolved').textContent = shownResolved;
+  document.getElementById('statContacts').textContent = shownContacts;
+}
+function setSocialHref(id, url){
+  const el = document.getElementById(id);
+  if(url){ el.href = url; el.style.opacity = 1; el.style.pointerEvents = 'auto'; }
+  else { el.href = '#'; el.style.opacity = 0.4; el.style.pointerEvents = 'none'; }
+}
+function shade(hex, percent){
+  hex = hex.replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex,16);
+  let r=(num>>16), g=(num>>8 & 0x00FF), b=(num & 0x0000FF);
+  r = Math.min(255, Math.max(0, r + Math.round(2.55*percent)));
+  g = Math.min(255, Math.max(0, g + Math.round(2.55*percent)));
+  b = Math.min(255, Math.max(0, b + Math.round(2.55*percent)));
+  return "#"+(0x1000000 + r*0x10000 + g*0x100 + b).toString(16).slice(1);
+}
+
+/* ============================= TOAST / MODAL ============================= */
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(ov=>{
+  ov.addEventListener('click', e=>{ if(e.target===ov) closeModal(ov.id); });
+});
+
+/* ============================= NAV ============================= */
+document.getElementById('hamburgerBtn').addEventListener('click', ()=>{
+  document.getElementById('navLinks').classList.toggle('open');
+});
+document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click', ()=>document.getElementById('navLinks').classList.remove('open')));
+document.getElementById('langToggle').addEventListener('click', ()=>{
+  LANG = LANG==='ka' ? 'en' : 'ka';
+  localStorage.setItem('globea_lang', LANG);
+  renderI18n();
+});
+document.getElementById('heroCta').addEventListener('click', ()=>document.getElementById('report').scrollIntoView({behavior:'smooth'}));
+document.getElementById('yearEl').textContent = new Date().getFullYear();
+
+/* ============================= REPORT FORM ============================= */
+let reportMode = 'anonymous';
+document.getElementById('modeAnon').addEventListener('click', ()=>{
+  reportMode='anonymous';
+  document.getElementById('modeAnon').classList.add('active');
+  document.getElementById('modeName').classList.remove('active');
+  document.getElementById('nameField').style.display='none';
+});
+document.getElementById('modeName').addEventListener('click', ()=>{
+  reportMode='named';
+  document.getElementById('modeName').classList.add('active');
+  document.getElementById('modeAnon').classList.remove('active');
+  document.getElementById('nameField').style.display='block';
+});
+const reportFileInput = document.getElementById('reportFile');
+let reportFileData = null;
+reportFileInput.addEventListener('change', async ()=>{
+  const file = reportFileInput.files[0];
+  if(!file) return;
+  document.getElementById('fileDropLabel').classList.add('has-file');
+  document.getElementById('fileDropText').textContent = file.name;
+  if(file.type.startsWith('image/')){
+    reportFileData = await resizeImageFile(file, 900, 0.72);
+  } else if(file.size < 3.5*1024*1024){
+    reportFileData = await fileToDataURL(file);
+  } else {
+    reportFileData = null;
+    showToast(LANG==='ka' ? "ვიდეო ძალიან დიდია შესანახად — გთხოვთ დაწეროთ აღწერაში." : "Video is too large to store — please describe it in the text field.");
+  }
+});
+function fileToDataURL(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+function resizeImageFile(file, maxDim, quality){
+  return new Promise((res,rej)=>{
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      img.onload = ()=>{
+        let w=img.width, h=img.height;
+        if(w>h && w>maxDim){ h = Math.round(h*maxDim/w); w=maxDim; }
+        else if(h>=w && h>maxDim){ w = Math.round(w*maxDim/h); h=maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        res(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = rej;
+      img.src = reader.result;
+    };
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+document.getElementById('reportForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const address = document.getElementById('reportAddress').value.trim();
+  const description = document.getElementById('reportDescription').value.trim();
+  const name = document.getElementById('reportName').value.trim();
+  if(!address || !description) return;
+  STATE.reports.unshift({
+    id:'rep_'+Date.now(),
+    address, description,
+    file:reportFileData,
+    anonymous: reportMode==='anonymous',
+    name: reportMode==='named' ? (name || (LANG==='ka'?'უცნობია':'Unnamed')) : null,
+    date: new Date().toISOString(),
+    status:'new'
+  });
+  saveState();
+  document.getElementById('reportForm').reset();
+  reportFileData = null;
+  document.getElementById('fileDropLabel').classList.remove('has-file');
+  document.getElementById('fileDropText').textContent = t('file_drop_text');
+  document.getElementById('modeAnon').click();
+  const msg = document.getElementById('formMsg');
+  msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'), 4000);
+});
+
+/* ============================= LEAFLET MAP ============================= */
+let leafletMap, markerLayer;
+function initLeaflet(){
+  leafletMap = L.map('leaflet-map', {scrollWheelZoom:false}).setView([41.7275, 44.7925], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'&copy; OpenStreetMap contributors', maxZoom:19
+  }).addTo(leafletMap);
+  markerLayer = L.layerGroup().addTo(leafletMap);
+}
+function statusIcon(status){
+  return L.divIcon({
+    className:'', html:`<div style="width:22px;height:22px;border-radius:50% 50% 50% 0;background:${STATUS_COLOR[status]};transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,0.35);"></div>`,
+    iconSize:[22,22], iconAnchor:[11,22], popupAnchor:[0,-22]
+  });
+}
+function renderLeafletMarkers(){
+  if(!markerLayer) return;
+  markerLayer.clearLayers();
+  STATE.locations.forEach(loc=>{
+    const m = L.marker([loc.lat, loc.lng], {icon:statusIcon(loc.status)});
+    m.bindPopup(`<b>${escapeHtml(loc.address)}</b><br><span style="font-size:12px;color:#666">${escapeHtml(t(STATUS_KEY[loc.status]))}</span><br><button onclick="openDetail('${loc.id}')" style="margin-top:6px;border:none;background:${STATE.config.brandColor};color:#fff;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;">${escapeHtml(t('more_btn'))}</button>`);
+    m.addTo(markerLayer);
+  });
+}
+function renderMapList(){
+  const list = document.getElementById('mapList');
+  list.innerHTML = '';
+  if(STATE.locations.length===0){
+    list.innerHTML = `<div class="empty-note">${t('no_locations')}</div>`;
+    return;
+  }
+  STATE.locations.forEach(loc=>{
+    const div = document.createElement('div');
+    div.className = 'map-list-item';
+    div.innerHTML = `<span class="status-dot" style="background:${STATUS_COLOR[loc.status]}"></span>
+      <div class="mli-text"><div class="mli-addr">${escapeHtml(loc.address)}</div><div class="mli-meta">${escapeHtml(loc.district||'')} · ${loc.contacts||0} ${escapeHtml(t('contacts_label'))}</div></div>`;
+    div.addEventListener('click', ()=>{
+      leafletMap.setView([loc.lat, loc.lng], 15, {animate:true});
+      setTimeout(()=>openDetail(loc.id), 300);
+    });
+    list.appendChild(div);
+  });
+}
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ============================= RESULTS GRID ============================= */
+let currentFilter = 'all';
+document.querySelectorAll('#statusFilters button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentFilter = btn.getAttribute('data-filter');
+    document.querySelectorAll('#statusFilters button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderResults();
+  });
+});
+function renderResults(){
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = '';
+  const items = STATE.locations.filter(l=>currentFilter==='all' || l.status===currentFilter);
+  if(items.length===0){
+    grid.innerHTML = `<div class="empty-note">${t('no_locations')}</div>`;
+    return;
+  }
+  items.forEach(loc=>{
+    const card = document.createElement('div');
+    card.className = 'loc-card';
+    const bg = loc.photo ? `background-image:url('${loc.photo}')` : '';
+    card.innerHTML = `
+      <div class="thumb" style="${bg}">
+        <div class="status-badge"><span class="status-dot" style="background:${STATUS_COLOR[loc.status]}"></span>${escapeHtml(t(STATUS_KEY[loc.status]))}</div>
+      </div>
+      <div class="loc-body">
+        <div class="addr">${escapeHtml(loc.address)}</div>
+        <div class="district">${escapeHtml(loc.district||'')}</div>
+        <div class="desc">${escapeHtml(loc.description||'')}</div>
+        <div class="loc-footer">
+          <span class="contacts-chip">${loc.contacts||0} ${escapeHtml(t('contacts_label'))}</span>
+          <button class="btn btn-ghost btn-small" onclick="openDetail('${loc.id}')">${escapeHtml(t('more_btn'))}</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+function openDetail(id){
+  const loc = STATE.locations.find(l=>l.id===id);
+  if(!loc) return;
+  const c = document.getElementById('detailContent');
+  let videoHtml = '';
+  if(loc.video){
+    if(loc.video.startsWith('data:video')){
+      videoHtml = `<video controls style="width:100%;border-radius:12px;margin-top:14px;"><source src="${loc.video}"></video>`;
+    } else {
+      let embed = loc.video;
+      const yt = loc.video.match(/(?:youtu\.be\/|v=)([\w-]{6,})/);
+      if(yt) embed = `https://www.youtube.com/embed/${yt[1]}`;
+      videoHtml = `<div style="margin-top:14px;"><iframe src="${embed}" style="width:100%;aspect-ratio:16/9;border:0;border-radius:12px;" allowfullscreen></iframe></div>`;
+    }
+  }
+  c.innerHTML = `
+    ${loc.photo ? `<img src="${loc.photo}" style="width:100%;border-radius:14px;aspect-ratio:16/9;object-fit:cover;">` : ''}
+    <div style="display:flex;align-items:center;gap:10px;margin-top:18px;">
+      <span class="status-dot" style="background:${STATUS_COLOR[loc.status]}"></span>
+      <span style="font-weight:700;font-size:0.85rem;color:${STATUS_COLOR[loc.status]}">${escapeHtml(t(STATUS_KEY[loc.status]))}</span>
+    </div>
+    <h3 style="margin-top:8px;">${escapeHtml(loc.address)}</h3>
+    <div class="modal-sub" style="margin-bottom:10px;">${escapeHtml(loc.district||'')}</div>
+    <p style="color:#37474a;line-height:1.6;">${escapeHtml(loc.description||'')}</p>
+    ${videoHtml}
+    <div style="margin-top:18px;display:flex;gap:20px;flex-wrap:wrap;">
+      <div><b style="font-family:var(--font-display);font-size:1.3rem;color:var(--brand-dark);">${loc.contacts||0}</b><div style="font-size:0.8rem;color:#6b7a7d;">${escapeHtml(t('contacts_label'))}</div></div>
+      ${loc.date ? `<div><b style="font-family:var(--font-display);font-size:1.3rem;color:var(--brand-dark);">${escapeHtml(loc.date)}</b><div style="font-size:0.8rem;color:#6b7a7d;">${LANG==='ka'?'თარიღი':'Date'}</div></div>` : ''}
+    </div>`;
+  openModal('detailModal');
+}
+
+/* ============================= ADMIN AUTH ============================= */
+function isAdmin(){ return sessionStorage.getItem('globea_admin')==='1'; }
+document.getElementById('adminLoginBtn').addEventListener('click', handleAdminEntry);
+document.getElementById('adminLoginBtn2').addEventListener('click', handleAdminEntry);
+function handleAdminEntry(){
+  if(isAdmin()){ openAdminPanel(); } else { openModal('loginModal'); document.getElementById('adminPasswordInput').focus(); }
+}
+document.getElementById('loginSubmitBtn').addEventListener('click', attemptLogin);
+document.getElementById('adminPasswordInput').addEventListener('keydown', e=>{ if(e.key==='Enter') attemptLogin(); });
+function attemptLogin(){
+  const val = document.getElementById('adminPasswordInput').value;
+  if(val === STATE.config.adminPassword){
+    sessionStorage.setItem('globea_admin','1');
+    document.getElementById('loginError').style.display='none';
+    document.getElementById('adminPasswordInput').value='';
+    closeModal('loginModal');
+    openAdminPanel();
+  } else {
+    document.getElementById('loginError').style.display='block';
+  }
+}
+document.getElementById('adminLogoutBtn').addEventListener('click', ()=>{
+  sessionStorage.removeItem('globea_admin');
+  closeModal('adminModal');
+  showToast(LANG==='ka' ? "გამოხვედით ადმინის რეჟიმიდან." : "You've been logged out.");
+});
+
+/* ============================= ADMIN PANEL ============================= */
+let adminTab = 'branding';
+document.querySelectorAll('.admin-tabs button[data-tab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    adminTab = btn.getAttribute('data-tab');
+    document.querySelectorAll('.admin-tabs button[data-tab]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAdminTab();
+  });
+});
+function openAdminPanel(){
+  adminTab = 'branding';
+  document.querySelectorAll('.admin-tabs button[data-tab]').forEach(b=>b.classList.toggle('active', b.getAttribute('data-tab')==='branding'));
+  renderAdminTab();
+  openModal('adminModal');
+}
+function renderAdminTab(){
+  const body = document.getElementById('adminTabBody');
+  if(adminTab==='branding') return renderBrandingTab(body);
+  if(adminTab==='locations') return renderLocationsTab(body);
+  if(adminTab==='reports') return renderReportsTab(body);
+  if(adminTab==='settings') return renderSettingsTab(body);
+  if(adminTab==='texts') return renderTextsTab(body);
+}
+
+/* ============================= ALL-TEXT EDITOR ============================= */
+const TEXT_GROUPS = [
+  {title:{ka:'ნავიგაცია', en:'Navigation'}, keys:['nav_about','nav_report','nav_results','nav_contact','nav_admin','nav_admin_footer']},
+  {title:{ka:'მთავარი გვერდი (Hero)', en:'Hero section'}, keys:['hero_kicker','hero_cta','hero_cta2','hero_chip_label','stat_locations','stat_resolved','stat_contacts']},
+  {title:{ka:'"ჩვენ შესახებ" სექცია', en:'"Who we are" section'}, keys:['about_kicker','about_title','mission_kicker']},
+  {title:{ka:'შეტყობინების ფორმა', en:'Report form'}, keys:['form_side_title','form_side_text','privacy_badge','form_title','label_address','placeholder_address','label_description','placeholder_description','label_file','file_drop_text','label_mode','mode_anonymous','mode_name','label_name','placeholder_name','submit_btn','submit_success']},
+  {title:{ka:'რუკის სექცია', en:'Map section'}, keys:['map_kicker','map_title','map_subtitle']},
+  {title:{ka:'შედეგების სექცია', en:'Results section'}, keys:['results_kicker','results_title','results_subtitle','filter_all','status_red','status_yellow','status_green','contacts_label','more_btn','no_locations']},
+  {title:{ka:'ფუტერი', en:'Footer'}, keys:['footer_desc','footer_nav','footer_contact','footer_rights']},
+  {title:{ka:'ადმინის შესვლა და პანელი', en:'Admin login & panel'}, keys:['admin_login_title','admin_login_sub','admin_password_label','admin_login_btn','admin_wrong_password','admin_tab_branding','admin_tab_locations','admin_tab_reports','admin_tab_settings','admin_tab_texts','admin_logout','empty_reports']}
+];
+function renderTextsTab(body){
+  const ov = STATE.config.i18nOverrides || {ka:{}, en:{}};
+  let html = `<h3>${t('admin_tab_texts')}</h3><p style="font-size:0.86rem;color:#6b7a7d;margin:-8px 0 20px;">${LANG==='ka'?'აქ შეგიძლიათ შეცვალოთ საიტზე გამოსახული ნებისმიერი სიტყვა თუ წინადადება, ორივე ენაზე.':'Edit any word or sentence shown on the site, in both languages.'}</p>`;
+  TEXT_GROUPS.forEach(group=>{
+    html += `<div class="admin-block"><h4>${escapeHtml(group.title[LANG])}</h4>`;
+    group.keys.forEach(key=>{
+      const kaVal = (ov.ka && ov.ka[key]!==undefined) ? ov.ka[key] : (I18N.ka[key]||'');
+      const enVal = (ov.en && ov.en[key]!==undefined) ? ov.en[key] : (I18N.en[key]||'');
+      const labelSrc = I18N[LANG][key] || key;
+      const label = labelSrc.length>50 ? labelSrc.slice(0,50)+'…' : labelSrc;
+      html += `
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:0.86rem;font-weight:600;margin-bottom:7px;color:#3a4a4e;">${escapeHtml(label)}</label>
+          <div class="field-row">
+            <div class="field"><label style="font-size:0.74rem;color:#8a9799;font-weight:500;">ქართული</label><textarea class="txtField" data-key="${key}" data-lang="ka" style="min-height:52px;">${escapeHtml(kaVal)}</textarea></div>
+            <div class="field"><label style="font-size:0.74rem;color:#8a9799;font-weight:500;">English</label><textarea class="txtField" data-key="${key}" data-lang="en" style="min-height:52px;">${escapeHtml(enVal)}</textarea></div>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  html += `<button class="btn btn-primary" id="saveTextsBtn">${LANG==='ka'?'ცვლილებების შენახვა':'Save changes'}</button>`;
+  body.innerHTML = html;
+  document.getElementById('saveTextsBtn').addEventListener('click', ()=>{
+    const cur = STATE.config.i18nOverrides || {ka:{}, en:{}};
+    const newOv = {ka:Object.assign({}, cur.ka), en:Object.assign({}, cur.en)};
+    body.querySelectorAll('.txtField').forEach(field=>{
+      const key = field.getAttribute('data-key');
+      const lang = field.getAttribute('data-lang');
+      newOv[lang][key] = field.value;
+    });
+    STATE.config.i18nOverrides = newOv;
+    saveState();
+    renderI18n();
+    renderAdminTab();
+    showToast(LANG==='ka' ? "ტექსტები განახლდა." : "Texts updated.");
+  });
+}
+
+function renderBrandingTab(body){
+  const c = STATE.config;
+  body.innerHTML = `
+    <h3 data-i18n="admin_tab_branding">${t('admin_tab_branding')}</h3>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'ბრენდის ფერი':'Brand color'}</h4>
+      <div class="color-row">
+        <input type="color" id="brandColorInput" value="${c.brandColor}">
+        <span style="font-size:0.85rem;color:#6b7a7d;">${LANG==='ka'?'გამოიყენება ღილაკებში, ლოგოში და აქცენტებში საიტის მთელ ტექსტში.':'Used for buttons, the logo, and accents across the whole site.'}</span>
+      </div>
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'ლოგო':'Logo'}</h4>
+      <div class="field"><label>${LANG==='ka'?'ლოგოს ტექსტი':'Logo text'}</label><input type="text" id="logoTextInput" value="${escapeHtml(c.logoText)}"></div>
+      <label class="file-drop" style="margin-top:12px;"><span>${LANG==='ka'?'ატვირთე ლოგოს სურათი (არასავალდებულო)':'Upload a logo image (optional)'}</span><input type="file" id="logoImageInput" accept="image/*"></label>
+      ${c.logoImage ? `<img src="${c.logoImage}" class="thumb-preview" style="aspect-ratio:3/1;object-fit:contain;background:#fff;"><button class="btn btn-ghost btn-small" style="margin-top:8px;" id="removeLogoBtn">${LANG==='ka'?'წაშალე ლოგოს სურათი':'Remove logo image'}</button>` : ''}
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'მთავარი ფოტო (Hero)':'Hero photo'}</h4>
+      <label class="file-drop"><span>${LANG==='ka'?'ატვირთე ახალი ფოტო':'Upload a new photo'}</span><input type="file" id="heroImageInput" accept="image/*"></label>
+      <img src="${c.heroImage}" class="thumb-preview" id="heroImagePreview" style="aspect-ratio:4/5; max-width:220px;">
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'მთავარი სათაური (Hero)':'Hero heading'}</h4>
+      <div class="field-row">
+        <div class="field"><label>ქართული</label><textarea id="heroTitleKa">${escapeHtml(c.heroTitle.ka)}</textarea></div>
+        <div class="field"><label>English</label><textarea id="heroTitleEn">${escapeHtml(c.heroTitle.en)}</textarea></div>
+      </div>
+      <div class="field-row" style="margin-top:14px;">
+        <div class="field"><label>ქართული — ${LANG==='ka'?'ქვეტექსტი':'subtitle'}</label><textarea id="heroSubKa">${escapeHtml(c.heroSubtitle.ka)}</textarea></div>
+        <div class="field"><label>English — subtitle</label><textarea id="heroSubEn">${escapeHtml(c.heroSubtitle.en)}</textarea></div>
+      </div>
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'სტატისტიკის რიცხვები (მთავარ გვერდზე)':'Stat numbers (on the homepage)'}</h4>
+      <p style="font-size:0.84rem;color:#6b7a7d;margin:0 0 12px;">${LANG==='ka'?'ცარიელი დატოვებით რიცხვი ავტომატურად დაითვლება ლოკაციების მიხედვით. რიცხვის ჩაწერით შეგიძლიათ ის საკუთარი მნიშვნელობით ჩაანაცვლოთ.':'Leave a field empty to auto-calculate it from your locations. Enter a number to override it with your own value.'}</p>
+      <div class="field-row" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="field"><label>${t('stat_locations')}</label><input type="text" inputmode="numeric" id="statLocIn" placeholder="${LANG==='ka'?'ავტო':'auto'}" value="${c.statOverrides && c.statOverrides.locations!=null ? escapeHtml(String(c.statOverrides.locations)) : ''}"></div>
+        <div class="field"><label>${t('stat_resolved')}</label><input type="text" inputmode="numeric" id="statResIn" placeholder="${LANG==='ka'?'ავტო':'auto'}" value="${c.statOverrides && c.statOverrides.resolved!=null ? escapeHtml(String(c.statOverrides.resolved)) : ''}"></div>
+        <div class="field"><label>${t('stat_contacts')}</label><input type="text" inputmode="numeric" id="statConIn" placeholder="${LANG==='ka'?'ავტო':'auto'}" value="${c.statOverrides && c.statOverrides.contacts!=null ? escapeHtml(String(c.statOverrides.contacts)) : ''}"></div>
+      </div>
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'"ჩვენ შესახებ" სექცია':'"Who we are" section'}</h4>
+      <label class="file-drop"><span>${LANG==='ka'?'ატვირთე სურათი':'Upload image'}</span><input type="file" id="aboutImageInput" accept="image/*"></label>
+      <img src="${c.aboutImage}" class="thumb-preview" id="aboutImagePreview">
+      <div class="field-row" style="margin-top:14px;">
+        <div class="field"><label>ქართული</label><textarea id="aboutTextKa" style="min-height:120px;">${escapeHtml(c.aboutText.ka)}</textarea></div>
+        <div class="field"><label>English</label><textarea id="aboutTextEn" style="min-height:120px;">${escapeHtml(c.aboutText.en)}</textarea></div>
+      </div>
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'ჩვენი მისია':'Our mission'}</h4>
+      <div class="field-row">
+        <div class="field"><label>ქართული</label><textarea id="missionKa">${escapeHtml(c.missionText.ka)}</textarea></div>
+        <div class="field"><label>English</label><textarea id="missionEn">${escapeHtml(c.missionText.en)}</textarea></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="saveBrandingBtn">${LANG==='ka'?'ცვლილებების შენახვა':'Save changes'}</button>
+  `;
+  let pendingLogoImage = c.logoImage, pendingAboutImage = c.aboutImage, pendingHeroImage = c.heroImage;
+  document.getElementById('heroImageInput').addEventListener('change', async e=>{
+    const f = e.target.files[0]; if(!f) return;
+    pendingHeroImage = await resizeImageFile(f, 900, 0.75);
+    document.getElementById('heroImagePreview').src = pendingHeroImage;
+  });
+  document.getElementById('logoImageInput').addEventListener('change', async e=>{
+    const f = e.target.files[0]; if(!f) return;
+    pendingLogoImage = await resizeImageFile(f, 300, 0.85);
+    STATE.config.logoImage = pendingLogoImage; saveState(); renderAdminTab(); applyConfig();
+  });
+  const removeBtn = document.getElementById('removeLogoBtn');
+  if(removeBtn) removeBtn.addEventListener('click', ()=>{ STATE.config.logoImage=null; saveState(); renderAdminTab(); applyConfig(); });
+  document.getElementById('aboutImageInput').addEventListener('change', async e=>{
+    const f = e.target.files[0]; if(!f) return;
+    pendingAboutImage = await resizeImageFile(f, 900, 0.75);
+    document.getElementById('aboutImagePreview').src = pendingAboutImage;
+  });
+  document.getElementById('saveBrandingBtn').addEventListener('click', ()=>{
+    STATE.config.brandColor = document.getElementById('brandColorInput').value;
+    STATE.config.logoText = document.getElementById('logoTextInput').value || 'GLOBEA';
+    STATE.config.logoImage = pendingLogoImage;
+    STATE.config.heroTitle = {ka:document.getElementById('heroTitleKa').value, en:document.getElementById('heroTitleEn').value};
+    STATE.config.heroSubtitle = {ka:document.getElementById('heroSubKa').value, en:document.getElementById('heroSubEn').value};
+    STATE.config.heroImage = pendingHeroImage;
+    STATE.config.aboutImage = pendingAboutImage;
+    STATE.config.aboutText = {ka:document.getElementById('aboutTextKa').value, en:document.getElementById('aboutTextEn').value};
+    STATE.config.missionText = {ka:document.getElementById('missionKa').value, en:document.getElementById('missionEn').value};
+    const parseStatIn = v=>{ v=v.trim(); return v==='' ? null : (isNaN(Number(v)) ? null : Number(v)); };
+    STATE.config.statOverrides = {
+      locations: parseStatIn(document.getElementById('statLocIn').value),
+      resolved: parseStatIn(document.getElementById('statResIn').value),
+      contacts: parseStatIn(document.getElementById('statConIn').value)
+    };
+    saveState();
+    applyConfig();
+    showToast(LANG==='ka' ? "ცვლილებები შენახულია." : "Changes saved.");
+  });
+}
+
+function renderLocationsTab(body){
+  body.innerHTML = `
+    <h3>${t('admin_tab_locations')}</h3>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'ახალი ლოკაციის დამატება — დააჭირე რუკას წერტილის ასარჩევად':'Add new location — click the map to set the point'}</h4>
+      <div id="adminMiniMap" class="mini-map"></div>
+      <div class="field-row" style="margin-top:14px;">
+        <div class="field"><label>${LANG==='ka'?'მისამართი':'Address'}</label><input type="text" id="locAddress"></div>
+        <div class="field"><label>${LANG==='ka'?'უბანი':'District'}</label><input type="text" id="locDistrict"></div>
+      </div>
+      <div class="field-row" style="margin-top:14px;">
+        <div class="field"><label>${LANG==='ka'?'გრძედი (lat)':'Latitude'}</label><input type="text" id="locLat" placeholder="41.71"></div>
+        <div class="field"><label>${LANG==='ka'?'განედი (lng)':'Longitude'}</label><input type="text" id="locLng" placeholder="44.79"></div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label>${LANG==='ka'?'სტატუსი':'Status'}</label>
+        <select id="locStatus" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);">
+          <option value="red">${t('status_red')} (🔴)</option>
+          <option value="yellow">${t('status_yellow')} (🟡)</option>
+          <option value="green">${t('status_green')} (🟢)</option>
+        </select>
+      </div>
+      <div class="field" style="margin-top:14px;"><label>${LANG==='ka'?'აღწერა':'Description'}</label><textarea id="locDesc" style="min-height:90px;"></textarea></div>
+      <div class="field-row" style="margin-top:14px;">
+        <div class="field"><label>${LANG==='ka'?'მომმართველთა რაოდენობა':'Number of people who contacted'}</label><input type="text" id="locContacts" placeholder="0"></div>
+        <div class="field"><label>${LANG==='ka'?'ვიდეოს ბმული (YouTube და სხვ.)':'Video link (YouTube etc.)'}</label><input type="text" id="locVideo" placeholder="https://..."></div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label>${LANG==='ka'?'ფოტო':'Photo'}</label>
+        <label class="file-drop"><span>${LANG==='ka'?'ატვირთე ფოტო':'Upload photo'}</span><input type="file" id="locPhotoInput" accept="image/*"></label>
+        <img id="locPhotoPreview" class="thumb-preview" style="display:none;">
+      </div>
+      <button class="btn btn-primary" id="addLocationBtn" style="margin-top:16px;">${LANG==='ka'?'ლოკაციის დამატება':'Add location'}</button>
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'არსებული ლოკაციები':'Existing locations'}</h4>
+      <div id="adminLocList"></div>
+    </div>
+  `;
+  let pendingPhoto = '';
+  const mini = L.map('adminMiniMap').setView([41.7275, 44.7925], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap'}).addTo(mini);
+  let tempMarker;
+  mini.on('click', e=>{
+    document.getElementById('locLat').value = e.latlng.lat.toFixed(5);
+    document.getElementById('locLng').value = e.latlng.lng.toFixed(5);
+    if(tempMarker) mini.removeLayer(tempMarker);
+    tempMarker = L.marker(e.latlng).addTo(mini);
+  });
+  document.getElementById('locPhotoInput').addEventListener('change', async e=>{
+    const f = e.target.files[0]; if(!f) return;
+    pendingPhoto = await resizeImageFile(f, 900, 0.72);
+    const prev = document.getElementById('locPhotoPreview');
+    prev.src = pendingPhoto; prev.style.display='block';
+  });
+  document.getElementById('addLocationBtn').addEventListener('click', ()=>{
+    const address = document.getElementById('locAddress').value.trim();
+    const lat = parseFloat(document.getElementById('locLat').value);
+    const lng = parseFloat(document.getElementById('locLng').value);
+    if(!address || isNaN(lat) || isNaN(lng)){
+      showToast(LANG==='ka' ? "შეავსეთ მისამართი და რუკაზე მონიშნეთ წერტილი." : "Fill in the address and click the map to set a point.");
+      return;
+    }
+    STATE.locations.unshift({
+      id:'loc_'+Date.now(), address, district:document.getElementById('locDistrict').value.trim(),
+      lat, lng, status:document.getElementById('locStatus').value,
+      description:document.getElementById('locDesc').value.trim(),
+      photo:pendingPhoto, video:document.getElementById('locVideo').value.trim(),
+      contacts:parseInt(document.getElementById('locContacts').value)||0,
+      date:new Date().toISOString().slice(0,10)
+    });
+    saveState();
+    applyConfig(); renderMapList(); renderResults(); renderLeafletMarkers();
+    renderLocationsTab(body);
+    showToast(LANG==='ka' ? "ლოკაცია დაემატა." : "Location added.");
+  });
+  renderAdminLocList();
+}
+let expandedLocRows = new Set();
+function refreshPublicViews(){ applyConfig(); renderMapList(); renderResults(); renderLeafletMarkers(); }
+function renderAdminLocList(){
+  const wrap = document.getElementById('adminLocList');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  if(STATE.locations.length===0){ wrap.innerHTML = `<p style="color:#6b7a7d;font-size:0.88rem;">${t('no_locations')}</p>`; return; }
+  const hint = document.createElement('p');
+  hint.style.cssText = 'font-size:0.8rem;color:#6b7a7d;margin:0 0 12px;';
+  hint.textContent = LANG==='ka' ? 'ველებზე პირდაპირ დაწერეთ ცვლილება, ისარებით გადაანაცვლეთ თანმიმდევრობა, "..." გახსნის სრულ დეტალებს (ფოტო, ვიდეო, აღწერა).' : 'Edit any field directly, use the arrows to reorder, and "..." opens full details (photo, video, description).';
+  wrap.appendChild(hint);
+  STATE.locations.forEach((loc, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'loc-admin-row';
+    const expanded = expandedLocRows.has(loc.id);
+    row.innerHTML = `
+      <div class="row-move">
+        <button class="moveUpBtn" data-id="${loc.id}" ${idx===0?'disabled':''} title="up">↑</button>
+        <button class="moveDownBtn" data-id="${loc.id}" ${idx===STATE.locations.length-1?'disabled':''} title="down">↓</button>
+      </div>
+      <span class="status-dot" style="background:${STATUS_COLOR[loc.status]};margin-top:8px;"></span>
+      <div class="lar-fields">
+        <div class="lar-top-line">
+          <input class="inline-input addr-input" data-id="${loc.id}" data-field="address" value="${escapeHtml(loc.address)}">
+        </div>
+        <div class="lar-meta-row">
+          <input class="inline-input" data-id="${loc.id}" data-field="district" value="${escapeHtml(loc.district||'')}" style="flex:1;">
+          <input class="inline-input contacts-input" type="number" min="0" data-id="${loc.id}" data-field="contacts" value="${loc.contacts||0}">
+          <select data-id="${loc.id}" class="statusSelect inline-input" style="flex:none;width:auto;">
+            <option value="red" ${loc.status==='red'?'selected':''}>🔴 ${escapeHtml(t('status_red'))}</option>
+            <option value="yellow" ${loc.status==='yellow'?'selected':''}>🟡 ${escapeHtml(t('status_yellow'))}</option>
+            <option value="green" ${loc.status==='green'?'selected':''}>🟢 ${escapeHtml(t('status_green'))}</option>
+          </select>
+          <button class="expand-toggle" data-id="${loc.id}">${expanded ? '▲' : '···'}</button>
+          <button class="deleteLocBtn" data-id="${loc.id}" title="delete" style="border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 9px;">🗑</button>
+        </div>
+        ${expanded ? `
+        <div class="row-detail" data-id="${loc.id}">
+          <textarea class="inline-input" data-id="${loc.id}" data-field="description">${escapeHtml(loc.description||'')}</textarea>
+          <input class="inline-input" data-id="${loc.id}" data-field="video" placeholder="${LANG==='ka'?'ვიდეოს ბმული':'Video link'}" value="${escapeHtml(loc.video||'')}">
+          <div style="display:flex; gap:12px; align-items:center;">
+            ${loc.photo ? `<img class="rd-thumb" src="${loc.photo}">` : ''}
+            <label class="file-drop" style="padding:10px 14px;flex:1;"><span style="font-size:0.78rem;">${LANG==='ka'?'ფოტოს შეცვლა':'Replace photo'}</span><input type="file" accept="image/*" class="rowPhotoInput" data-id="${loc.id}"></label>
+          </div>
+        </div>` : ''}
+      </div>`;
+    wrap.appendChild(row);
+  });
+
+  wrap.querySelectorAll('.moveUpBtn').forEach(btn=>btn.addEventListener('click', ()=>{
+    const i = STATE.locations.findIndex(l=>l.id===btn.getAttribute('data-id'));
+    if(i>0){ [STATE.locations[i-1], STATE.locations[i]] = [STATE.locations[i], STATE.locations[i-1]]; saveState(); refreshPublicViews(); renderAdminLocList(); }
+  }));
+  wrap.querySelectorAll('.moveDownBtn').forEach(btn=>btn.addEventListener('click', ()=>{
+    const i = STATE.locations.findIndex(l=>l.id===btn.getAttribute('data-id'));
+    if(i<STATE.locations.length-1){ [STATE.locations[i+1], STATE.locations[i]] = [STATE.locations[i], STATE.locations[i+1]]; saveState(); refreshPublicViews(); renderAdminLocList(); }
+  }));
+  wrap.querySelectorAll('.expand-toggle').forEach(btn=>btn.addEventListener('click', ()=>{
+    const id = btn.getAttribute('data-id');
+    if(expandedLocRows.has(id)) expandedLocRows.delete(id); else expandedLocRows.add(id);
+    renderAdminLocList();
+  }));
+  wrap.querySelectorAll('.statusSelect').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const loc = STATE.locations.find(l=>l.id===sel.getAttribute('data-id'));
+      loc.status = sel.value;
+      saveState(); refreshPublicViews(); renderAdminLocList();
+    });
+  });
+  wrap.querySelectorAll('.deleteLocBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      STATE.locations = STATE.locations.filter(l=>l.id!==btn.getAttribute('data-id'));
+      expandedLocRows.delete(btn.getAttribute('data-id'));
+      saveState(); refreshPublicViews(); renderAdminLocList();
+    });
+  });
+  wrap.querySelectorAll('.inline-input[data-field]').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      const loc = STATE.locations.find(l=>l.id===inp.getAttribute('data-id'));
+      const field = inp.getAttribute('data-field');
+      loc[field] = field==='contacts' ? (parseInt(inp.value)||0) : inp.value;
+      saveState(); refreshPublicViews();
+    });
+  });
+  wrap.querySelectorAll('.rowPhotoInput').forEach(inp=>{
+    inp.addEventListener('change', async ()=>{
+      const f = inp.files[0]; if(!f) return;
+      const loc = STATE.locations.find(l=>l.id===inp.getAttribute('data-id'));
+      loc.photo = await resizeImageFile(f, 900, 0.72);
+      saveState(); refreshPublicViews(); renderAdminLocList();
+    });
+  });
+}
+
+function renderReportsTab(body){
+  body.innerHTML = `<h3>${t('admin_tab_reports')}</h3><div id="reportsListWrap"></div>`;
+  const wrap = document.getElementById('reportsListWrap');
+  if(STATE.reports.length===0){ wrap.innerHTML = `<p style="color:#6b7a7d;font-size:0.88rem;">${t('empty_reports')}</p>`; return; }
+  STATE.reports.forEach(rep=>{
+    const item = document.createElement('div');
+    item.className = 'report-admin-item';
+    const who = rep.anonymous ? (LANG==='ka'?'ანონიმური':'Anonymous') : escapeHtml(rep.name||'');
+    item.innerHTML = `
+      <div class="ra-top"><span>${new Date(rep.date).toLocaleString(LANG==='ka'?'ka-GE':'en-GB')} · ${who}</span>${rep.status==='new'?'<span class="tag-new">NEW</span>':''}</div>
+      <b>${escapeHtml(rep.address)}</b>
+      <p style="font-size:0.88rem;color:#4a5a5d;margin:6px 0;">${escapeHtml(rep.description)}</p>
+      ${rep.file ? (rep.file.startsWith('data:video') ? `<video controls style="max-width:220px;border-radius:8px;"><source src="${rep.file}"></video>` : `<img src="${rep.file}" style="max-width:220px;border-radius:8px;">`) : ''}
+      <div style="margin-top:8px;"><button class="btn btn-ghost btn-small deleteReportBtn" data-id="${rep.id}">${LANG==='ka'?'წაშლა':'Delete'}</button></div>
+    `;
+    wrap.appendChild(item);
+  });
+  wrap.querySelectorAll('.deleteReportBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      STATE.reports = STATE.reports.filter(r=>r.id!==btn.getAttribute('data-id'));
+      saveState(); renderReportsTab(body);
+    });
+  });
+}
+
+function renderSettingsTab(body){
+  const c = STATE.config;
+  body.innerHTML = `
+    <h3>${t('admin_tab_settings')}</h3>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'კონტაქტი და სოციალური ქსელები':'Contact & social media'}</h4>
+      <div class="field"><label>${LANG==='ka'?'საკონტაქტო ელფოსტა':'Contact email'}</label><input type="text" id="contactEmailInput" value="${escapeHtml(c.contactEmail)}"></div>
+      <div class="field-row" style="margin-top:14px;">
+        <div class="field"><label>Facebook</label><input type="text" id="socialFacebook" placeholder="https://facebook.com/..." value="${escapeHtml(c.social.facebook||'')}"></div>
+        <div class="field"><label>Instagram</label><input type="text" id="socialInstagram" placeholder="https://instagram.com/..." value="${escapeHtml(c.social.instagram||'')}"></div>
+      </div>
+      <div class="field" style="margin-top:14px;"><label>TikTok</label><input type="text" id="socialTiktok" placeholder="https://tiktok.com/@..." value="${escapeHtml(c.social.tiktok||'')}"></div>
+      <button class="btn btn-primary" id="saveContactBtn" style="margin-top:16px;">${LANG==='ka'?'შენახვა':'Save'}</button>
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'QR კოდი საიტზე შესასვლელად':'QR code to enter the site'}</h4>
+      <p style="font-size:0.86rem;color:#6b7a7d;margin:0 0 10px;">${LANG==='ka'?'დასკანერების შემდეგ ეს კოდი პირდაპირ საიტზე გადაიყვანს ვიზიტორს — არა ადმინის პანელში. ადმინში შესასვლელად ყოველთვის საჭირო იქნება პაროლი, დამოუკიდებლად იმისა, საიტზე როგორ მოხვდა ვიზიტორი.':'Scanning this code takes visitors straight to the public site — never into the admin panel. Getting into Admin always requires the password, no matter how someone arrived at the site.'}</p>
+      <div class="field"><label>${LANG==='ka'?'საიტის ბმული':'Site URL'}</label><input type="text" id="qrUrlInput" value="${window.location.href.split('#')[0]}"></div>
+      <button class="btn btn-ghost btn-small" id="genQrBtn" style="margin-top:12px;">${LANG==='ka'?'QR კოდის გენერაცია':'Generate QR code'}</button>
+      <div class="qr-box">
+        <div id="qrCanvasHolder"></div>
+        <div style="font-size:0.84rem;color:#5b6b6e; max-width:260px;">
+          <p style="margin:0 0 10px;">${LANG==='ka'?'დაბეჭდეთ ეს კოდი ბროშურაზე, სკვერზე ან სოციალურ ქსელში — ნებისმიერს შეეძლება სკანირება საიტზე პირდაპირ შესასვლელად.':'Print this on a flyer, a park sign, or share it on social media — anyone can scan it to open the site directly.'}</p>
+          <a href="#" id="qrDownloadLink" download="globea-qr.png" style="display:none;font-weight:600;color:var(--brand-dark);">${LANG==='ka'?'გადმოწერა PNG':'Download PNG'}</a>
+        </div>
+      </div>
+    </div>
+    <div class="admin-block">
+      <h4>${LANG==='ka'?'პაროლის შეცვლა':'Change password'}</h4>
+      <div class="field"><label>${LANG==='ka'?'მიმდინარე პაროლი':'Current password'}</label><input type="password" id="curPass"></div>
+      <div class="field" style="margin-top:12px;"><label>${LANG==='ka'?'ახალი პაროლი':'New password'}</label><input type="password" id="newPass"></div>
+      <button class="btn btn-primary" id="changePassBtn" style="margin-top:14px;">${LANG==='ka'?'პაროლის განახლება':'Update password'}</button>
+      <p class="admin-note">${LANG==='ka'?'⚠️ ეს საიტი მუშაობს მხოლოდ ბრაუზერში (localStorage) — რეალური სერვერი არ არსებობს. პაროლი იცავს შემთხვევით წვდომას, მაგრამ ტექნიკურად გათვითცნობიერებული ვიზიტორი ბრაუზერის დეველოპერული ხელსაწყოებით მას გვერდი აუარა შეუძლია. სენსიტიური მონაცემებისთვის რეალურ სერვერზე გადატანა გირჩევთ.':'⚠️ This site runs entirely in the browser (localStorage) — there is no real server. The password blocks casual access, but a technically savvy visitor could bypass it using browser developer tools. For real security, this would need a proper backend.'}</p>
+    </div>
+  `;
+  document.getElementById('saveContactBtn').addEventListener('click', ()=>{
+    STATE.config.contactEmail = document.getElementById('contactEmailInput').value.trim() || 'contact@globea.ge';
+    STATE.config.social = {
+      facebook: document.getElementById('socialFacebook').value.trim(),
+      instagram: document.getElementById('socialInstagram').value.trim(),
+      tiktok: document.getElementById('socialTiktok').value.trim()
+    };
+    saveState(); applyConfig();
+    showToast(LANG==='ka'?'კონტაქტის ინფორმაცია განახლდა.':'Contact info updated.');
+  });
+  document.getElementById('genQrBtn').addEventListener('click', ()=>{
+    const holder = document.getElementById('qrCanvasHolder');
+    const url = document.getElementById('qrUrlInput').value.trim();
+    if(!url) return;
+    holder.innerHTML = '';
+    new QRCode(holder, {text:url, width:168, height:168, colorDark:STATE.config.brandColor, colorLight:"#ffffff"});
+    setTimeout(()=>{
+      const img = holder.querySelector('img') || holder.querySelector('canvas');
+      const dl = document.getElementById('qrDownloadLink');
+      if(img){
+        dl.style.display = 'inline-block';
+        dl.href = img.tagName==='CANVAS' ? img.toDataURL('image/png') : img.src;
+      }
+    }, 150);
+  });
+  document.getElementById('changePassBtn').addEventListener('click', ()=>{
+    const cur = document.getElementById('curPass').value;
+    const nw = document.getElementById('newPass').value;
+    if(cur !== STATE.config.adminPassword){ showToast(LANG==='ka'?'მიმდინარე პაროლი არასწორია.':'Current password is incorrect.'); return; }
+    if(!nw || nw.length<4){ showToast(LANG==='ka'?'ახალი პაროლი ძალიან მოკლეა.':'New password is too short.'); return; }
+    STATE.config.adminPassword = nw;
+    saveState();
+    showToast(LANG==='ka'?'პაროლი განახლდა.':'Password updated.');
+    document.getElementById('curPass').value=''; document.getElementById('newPass').value='';
+  });
+}
+
+/* ============================= INIT ============================= */
+initLeaflet();
+renderI18n();
+</script>
+</body>
+</html>
