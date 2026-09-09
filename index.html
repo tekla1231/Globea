@@ -270,7 +270,7 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow-tag"><span class="dot"></span><span data-i18n="hero_kicker">ახალგაზრდული საქალაქო ინიციატივა </span></span>
+      <span class="eyebrow-tag"><span class="dot"></span><span data-i18n="hero_kicker">ახალგაზრდული საქალაქო ინიციატივა · თბილისი</span></span>
       <h1 id="heroTitleEl">უსაფრთხო ეზო და სკვერი თბილისის ყოველ ბავშვს</h1>
       <p class="lead" id="heroSubtitleEl">ჩვენ ვაკვირდებით სათამაშო მოედნების მდგომარეობას, ვაწვდით ინფორმაციას მუნიციპალიტეტს და ვადევნებთ თვალს პრობლემის მოგვარებამდე.</p>
       <div class="hero-ctas">
@@ -477,7 +477,7 @@ const I18N = {
   ka:{
     nav_about:"ჩვენ შესახებ", nav_report:"შეატყობინე", nav_results:"შედეგები", nav_contact:"კონტაქტი",
     nav_admin:"ადმინი", nav_admin_footer:"ადმინის შესვლა",
-    hero_kicker:"ახალგაზრდული საქალაქო ინიციატივა ",
+    hero_kicker:"ახალგაზრდული საქალაქო ინიციატივა · თბილისი",
     hero_cta:"შეატყობინე პრობლემის შესახებ", hero_cta2:"იხილე რუკაზე",
     hero_chip_label:"ლოკაცია მონიტორინგზეა",
     stat_locations:"დაფიქსირებული ადგილი", stat_resolved:"შეკეთებული", stat_contacts:"მოქალაქის ხმა",
@@ -553,7 +553,8 @@ const DEFAULT_STATE = {
     contactEmail:"contact@globea.ge",
     social:{facebook:"", instagram:"", tiktok:""},
     i18nOverrides:{ka:{}, en:{}},
-    statOverrides:{locations:null, resolved:null, contacts:null}
+    statOverrides:{locations:null, resolved:null, contacts:null},
+    githubSync:{workerUrl:"", secret:"", autoPublish:true}
   },
   locations:[
     {id:"loc1", address:"ნაძალადევი, დადიანის ქუჩა 154", district:"ნაძალადევი", lat:41.7625, lng:44.8043, status:"yellow", description:"ქანქარა და სრიალის ტრასა დაზიანებულია, ლითონის ნაწილები ჟანგიანია და საშიშია ბავშვებისთვის. წერილი გაეგზავნა რაიონის მერიას.", photo:"https://images.unsplash.com/photo-1519331379826-f10be5486c6f?q=80&w=800&auto=format&fit=crop", video:"", contacts:7, date:"2026-05-14"},
@@ -583,6 +584,60 @@ function saveState(){
   }
 }
 let STATE = loadState();
+
+/* ============================= GITHUB PUBLISHING ============================= */
+// Loads the publicly-committed data.json (if it exists) so every visitor sees the
+// admin's latest published content, regardless of which browser/device made the edit.
+// Falls back silently to local/default data when offline or before the first publish.
+async function initPublicData(){
+  try{
+    const resp = await fetch('./data.json', {cache:'no-store'});
+    if(!resp.ok) return;
+    const remote = await resp.json();
+    if(remote && remote.config){
+      // remote.config never contains adminPassword/githubSync (stripped before publishing),
+      // so this only overrides the public-facing fields and leaves local secrets untouched.
+      STATE.config = Object.assign(structuredClone(DEFAULT_STATE.config), STATE.config, remote.config);
+    }
+    if(remote && Array.isArray(remote.locations)){
+      STATE.locations = remote.locations;
+    }
+    saveState();
+  }catch(e){ /* offline, or data.json not published yet — keep local/default state */ }
+}
+// Strips anything that must never leave the admin's browser before committing to the public repo.
+function getPublicPayload(){
+  const cfg = structuredClone(STATE.config);
+  delete cfg.adminPassword;
+  delete cfg.githubSync;
+  return { config: cfg, locations: STATE.locations, publishedAt: new Date().toISOString() };
+}
+async function publishToGitHub(silent){
+  const gs = STATE.config.githubSync || {};
+  if(!gs.workerUrl || !gs.secret){
+    if(!silent) showToast(LANG==='ka' ? 'GitHub-ზე გამოქვეყნება არ არის კონფიგურირებული — პარამეტრები → „GitHub-ზე გამოქვეყნება".' : "GitHub publishing isn't set up yet — see Settings → \"Publish to GitHub\".");
+    return;
+  }
+  try{
+    const resp = await fetch(gs.workerUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'X-Admin-Secret': gs.secret},
+      body: JSON.stringify({content: JSON.stringify(getPublicPayload(), null, 2)})
+    });
+    if(resp.ok){
+      if(!silent) showToast(LANG==='ka' ? '✓ საჯაროდ გამოქვეყნდა GitHub-ზე.' : '✓ Published live to GitHub.');
+    }else{
+      const txt = await resp.text().catch(()=>String(resp.status));
+      showToast((LANG==='ka' ? 'GitHub-ზე გამოქვეყნება ვერ მოხერხდა: ' : 'Failed to publish to GitHub: ') + txt.slice(0,140));
+    }
+  }catch(e){
+    showToast(LANG==='ka' ? 'GitHub-ის Worker-თან დაკავშირება ვერ მოხერხდა.' : "Couldn't reach the GitHub publisher.");
+  }
+}
+function maybeAutoPublish(){
+  const gs = STATE.config.githubSync;
+  if(gs && gs.autoPublish && gs.workerUrl && gs.secret) publishToGitHub(true);
+}
 const STATUS_COLOR = {red:"#C0472C", yellow:"#C98A1E", green:"#3C8562"};
 const STATUS_KEY = {red:"status_red", yellow:"status_yellow", green:"status_green"};
 
@@ -984,6 +1039,7 @@ function renderTextsTab(body){
     saveState();
     renderI18n();
     renderAdminTab();
+    maybeAutoPublish();
     showToast(LANG==='ka' ? "ტექსტები განახლდა." : "Texts updated.");
   });
 }
@@ -1084,6 +1140,7 @@ function renderBrandingTab(body){
     };
     saveState();
     applyConfig();
+    maybeAutoPublish();
     showToast(LANG==='ka' ? "ცვლილებები შენახულია." : "Changes saved.");
   });
 }
@@ -1160,14 +1217,14 @@ function renderLocationsTab(body){
       date:new Date().toISOString().slice(0,10)
     });
     saveState();
-    applyConfig(); renderMapList(); renderResults(); renderLeafletMarkers();
+    applyConfig(); renderMapList(); renderResults(); renderLeafletMarkers(); maybeAutoPublish();
     renderLocationsTab(body);
     showToast(LANG==='ka' ? "ლოკაცია დაემატა." : "Location added.");
   });
   renderAdminLocList();
 }
 let expandedLocRows = new Set();
-function refreshPublicViews(){ applyConfig(); renderMapList(); renderResults(); renderLeafletMarkers(); }
+function refreshPublicViews(){ applyConfig(); renderMapList(); renderResults(); renderLeafletMarkers(); maybeAutoPublish(); }
 function renderAdminLocList(){
   const wrap = document.getElementById('adminLocList');
   if(!wrap) return;
@@ -1287,6 +1344,7 @@ function renderReportsTab(body){
 
 function renderSettingsTab(body){
   const c = STATE.config;
+  const gs = STATE.config.githubSync || {workerUrl:'', secret:'', autoPublish:true};
   body.innerHTML = `
     <h3>${t('admin_tab_settings')}</h3>
     <div class="admin-block">
@@ -1313,6 +1371,22 @@ function renderSettingsTab(body){
       </div>
     </div>
     <div class="admin-block">
+      <h4>${LANG==='ka'?'GitHub-ზე ავტომატური გამოქვეყნება':'Auto-publish to GitHub'}</h4>
+      <p class="admin-note" style="margin-bottom:12px;">${LANG==='ka'
+        ? 'ეს აკავშირებს ადმინის პანელს პატარა შუამავალ სერვისთან (Worker), რომელიც ინახავს თქვენს GitHub Token-ს უსაფრთხოდ — Token არასდროს ხვდება ბრაუზერში ან საჯარო კოდში. აქ საჭირო „საიდუმლო კოდი" მხოლოდ პაროლივით ამოწმებს, რომ მოთხოვნა თქვენგან მოდის.'
+        : "This connects the admin panel to a small proxy service (a Worker) that holds your GitHub token securely — the token never touches the browser or the public code. The \"secret\" below just acts like a password confirming the request came from you."}</p>
+      <div class="field"><label>Worker URL</label><input type="text" id="ghWorkerUrl" placeholder="https://your-worker.your-name.workers.dev" value="${escapeHtml(gs.workerUrl||'')}"></div>
+      <div class="field" style="margin-top:12px;"><label>${LANG==='ka'?'საიდუმლო კოდი (Worker-ზეც იგივე უნდა იყოს)':'Secret (must match the one set on the Worker)'}</label><input type="password" id="ghSecret" value="${escapeHtml(gs.secret||'')}"></div>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:0.86rem;color:#3a4a4e;"><input type="checkbox" id="ghAutoPublish" ${gs.autoPublish!==false?'checked':''}> ${LANG==='ka'?'ავტომატურად გამოქვეყნდეს GitHub-ზე ყოველი შენახვისას':'Automatically publish to GitHub on every save'}</label>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="saveGhBtn">${LANG==='ka'?'შენახვა':'Save'}</button>
+        <button class="btn btn-ghost btn-small" id="publishNowBtn">${LANG==='ka'?'ახლავე გამოქვეყნება':'Publish now'}</button>
+      </div>
+      <p class="admin-note" style="margin-top:14px;">${LANG==='ka'
+        ? '⚠️ ეს ფუნქცია მუშაობს მხოლოდ მას შემდეგ, რაც ცალკე დააყენებთ Worker-ს (ინსტრუქცია მოგეწოდებათ ცალკე). სანამ არ დააკონფიგურირებთ, საიტი ჩვეულებრივად განაგრძობს მუშაობას — უბრალოდ ცვლილებები დარჩება ამ ბრაუზერში, სანამ „ახლავე გამოქვეყნებას" არ დააჭერთ Worker-ის დაყენების შემდეგ.'
+        : "⚠️ This only works after you set up the Worker separately (instructions provided outside this file). Until it's configured, the site keeps working as before — changes just stay in this browser until you press \"Publish now\" once the Worker is set up."}</p>
+    </div>
+    <div class="admin-block">
       <h4>${LANG==='ka'?'პაროლის შეცვლა':'Change password'}</h4>
       <div class="field"><label>${LANG==='ka'?'მიმდინარე პაროლი':'Current password'}</label><input type="password" id="curPass"></div>
       <div class="field" style="margin-top:12px;"><label>${LANG==='ka'?'ახალი პაროლი':'New password'}</label><input type="password" id="newPass"></div>
@@ -1328,6 +1402,7 @@ function renderSettingsTab(body){
       tiktok: document.getElementById('socialTiktok').value.trim()
     };
     saveState(); applyConfig();
+    maybeAutoPublish();
     showToast(LANG==='ka'?'კონტაქტის ინფორმაცია განახლდა.':'Contact info updated.');
   });
   document.getElementById('genQrBtn').addEventListener('click', ()=>{
@@ -1345,6 +1420,16 @@ function renderSettingsTab(body){
       }
     }, 150);
   });
+  document.getElementById('saveGhBtn').addEventListener('click', ()=>{
+    STATE.config.githubSync = {
+      workerUrl: document.getElementById('ghWorkerUrl').value.trim(),
+      secret: document.getElementById('ghSecret').value,
+      autoPublish: document.getElementById('ghAutoPublish').checked
+    };
+    saveState();
+    showToast(LANG==='ka'?'პარამეტრები შენახულია.':'Settings saved.');
+  });
+  document.getElementById('publishNowBtn').addEventListener('click', ()=>publishToGitHub(false));
   document.getElementById('changePassBtn').addEventListener('click', ()=>{
     const cur = document.getElementById('curPass').value;
     const nw = document.getElementById('newPass').value;
@@ -1360,6 +1445,11 @@ function renderSettingsTab(body){
 /* ============================= INIT ============================= */
 initLeaflet();
 renderI18n();
+initPublicData().then(renderI18n);
 </script>
 </body>
 </html>
+
+  
+       
+
