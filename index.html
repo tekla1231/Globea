@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="ka">
 <head>
+<!-- EmailJS SDK -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="text/javascript">
+   (function(){
+      emailjs.init("IxAZFeQgvur_R9IAA");
+   })();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GLOBEA — უსაფრთხო ეზო ყველა ბავშვისთვის</title>
@@ -806,6 +813,21 @@ document.getElementById('reportForm').addEventListener('submit', e=>{
   const description = document.getElementById('reportDescription').value.trim();
   const name = document.getElementById('reportName').value.trim();
   if(!address || !description) return;
+  // EmailJS-ით შეტყობინების გაგზავნა
+const templateParams = {
+  location: address,
+  description: description,
+  file_url: "ფაილი მიმაგრებულია",
+  user_identity: name || (isAnonymous ? "ანონიმურად" : "ანონიმურად"),
+  date: new Date().toLocaleString('ka-GE')
+};
+
+emailjs.send('service_0wqowpj', 'template_8rv2x56', templateParams)
+  .then(function(response) {
+     console.log('EmailJS SUCCESS!', response.status, response.text);
+  }, function(error) {
+     console.log('EmailJS FAILED...', error);
+  });
   STATE.reports.unshift({
     id:'rep_'+Date.now(),
     address, description,
